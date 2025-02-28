@@ -1,47 +1,56 @@
-// SignUpScreen.js
 import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  Image,
   StyleSheet,
   SafeAreaView,
   Platform,
 } from 'react-native';
-
-// Import Picker from the correct package
 import { Picker } from '@react-native-picker/picker';
 
+// If "logo.png" is in the same folder:
+import logo from './logo.png';
+
 export default function SignUpScreen({ navigation }) {
-  // Form states
+  const [name, setName] = useState('');
   const [year, setYear] = useState('');
   const [major, setMajor] = useState('');
   const [gender, setGender] = useState('');
 
-  // This function would handle form submission or navigation
   const handleContinue = () => {
-    // Validate or do something with the form data
-    console.log({ year, major, gender });
-    // e.g., navigation.navigate('NextScreen');
+    console.log({ name, year, major, gender });
+    // navigation.navigate('NextScreen');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header / Title */}
+      {/* 1) Dark Green Header with curved bottom corners */}
       <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>Illini Swap</Text>
+        {/* 2) Centered Logo */}
+        <Image source={logo} style={styles.logo} resizeMode="contain" />
       </View>
 
-      {/* Form Container */}
+      {/* 3) Main Form */}
       <View style={styles.formContainer}>
+        <Text style={styles.label}>Full Name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your name"
+          placeholderTextColor="#999"
+          value={name}
+          onChangeText={setName}
+        />
+
         {/* Year Picker */}
         <Text style={styles.label}>Year</Text>
         <View style={styles.pickerWrapper}>
           <Picker
             selectedValue={year}
             style={styles.picker}
-            onValueChange={(itemValue) => setYear(itemValue)}
+            onValueChange={(val) => setYear(val)}
           >
             <Picker.Item label="Select your year" value="" />
             <Picker.Item label="Freshman" value="Freshman" />
@@ -58,7 +67,7 @@ export default function SignUpScreen({ navigation }) {
           <Picker
             selectedValue={major}
             style={styles.picker}
-            onValueChange={(itemValue) => setMajor(itemValue)}
+            onValueChange={(val) => setMajor(val)}
           >
             <Picker.Item label="Select your major" value="" />
             <Picker.Item label="Computer Science" value="CS" />
@@ -69,51 +78,26 @@ export default function SignUpScreen({ navigation }) {
           </Picker>
         </View>
 
-        {/* Gender Radio Buttons */}
+        {/* Gender Options */}
         <Text style={styles.label}>Gender</Text>
         <View style={styles.radioGroup}>
-          <TouchableOpacity
-            style={styles.radioButtonContainer}
-            onPress={() => setGender('Male')}
-          >
-            <View style={styles.radioCircle}>
-              {gender === 'Male' && <View style={styles.selectedRb} />}
-            </View>
-            <Text style={styles.radioText}>Male</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.radioButtonContainer}
-            onPress={() => setGender('Female')}
-          >
-            <View style={styles.radioCircle}>
-              {gender === 'Female' && <View style={styles.selectedRb} />}
-            </View>
-            <Text style={styles.radioText}>Female</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.radioButtonContainer}
-            onPress={() => setGender('Prefer not to say')}
-          >
-            <View style={styles.radioCircle}>
-              {gender === 'Prefer not to say' && <View style={styles.selectedRb} />}
-            </View>
-            <Text style={styles.radioText}>Prefer not to say</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.radioButtonContainer}
-            onPress={() => setGender('Other')}
-          >
-            <View style={styles.radioCircle}>
-              {gender === 'Other' && <View style={styles.selectedRb} />}
-            </View>
-            <Text style={styles.radioText}>Other</Text>
-          </TouchableOpacity>
+          {['Male', 'Female', 'Prefer not to say', 'Other'].map((option) => (
+            <TouchableOpacity
+              key={option}
+              style={styles.radioButtonContainer}
+              onPress={() => setGender(option)}
+            >
+              <View style={styles.radioCircle}>
+                {gender === option && <View style={styles.selectedRb} />}
+              </View>
+              <Text style={styles.radioText}>{option}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
+      </View>
 
-        {/* Continue Button */}
+      {/* 4) Bottom Button Container */}
+      <View style={styles.bottomContainer}>
         <TouchableOpacity style={styles.button} onPress={handleContinue}>
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
@@ -126,50 +110,70 @@ export default function SignUpScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FAF7E8', // Cream background
   },
+
+  /* Header: 390 wide, 171 tall, dark green (#1F4035) with curved bottom corners */
   headerContainer: {
-    backgroundColor: '#324B4A',
-    padding: 20,
+    width: '100%',
+    height: 171,
+    backgroundColor: '#1F4035',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: {
-    fontSize: 24,
-    color: '#ffffff',
-    fontWeight: 'bold',
+  /* Adjust the logo size to your liking, ensure it's a transparent PNG. */
+  logo: {
+    width: 200,
+    height: 80,
   },
+
+  /* Form area, spaced below the header */
   formContainer: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'flex-start',
+    paddingHorizontal: 24,
+    paddingTop: 16,
   },
   label: {
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 12,
+    marginBottom: 6,
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+    fontFamily: 'Montserrat', // Ensure Montserrat is properly loaded
+  },
+  input: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#CCC',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: '#FFF',
+    fontFamily: 'Montserrat',
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    marginBottom: 10,
+    borderColor: '#CCC',
+    borderRadius: 8,
     overflow: 'hidden',
+    marginBottom: 8,
   },
   picker: {
-    height: Platform.OS === 'ios' ? 200 : 50,
+    height: Platform.OS === 'ios' ? 180 : 50,
     width: '100%',
+    fontFamily: 'Montserrat',
   },
+
+  /* Gender radio */
   radioGroup: {
-    marginTop: 10,
+    marginTop: 8,
     marginBottom: 20,
   },
   radioButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   radioCircle: {
     height: 20,
@@ -190,17 +194,29 @@ const styles = StyleSheet.create({
   radioText: {
     fontSize: 16,
     color: '#333',
+    fontFamily: 'Montserrat',
+  },
+
+  /* Bottom container with "Continue" button */
+  bottomContainer: {
+    backgroundColor: '#1F4035',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingVertical: 20,
+    alignItems: 'center',
   },
   button: {
-    backgroundColor: '#324B4A',
-    padding: 15,
-    borderRadius: 6,
+    backgroundColor: '#567870',
+    width: '80%',
+    borderRadius: 30,
+    height: 50,
     alignItems: 'center',
-    marginTop: 30,
+    justifyContent: 'center',
   },
   buttonText: {
-    color: '#ffffff',
+    color: '#FAF7E8',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Montserrat',
   },
 });
