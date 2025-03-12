@@ -10,30 +10,42 @@ import {
   Platform,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-
-// If "logo.png" is in the same folder:
 import logo from './logo.png';
 
 export default function SignUpScreen({ navigation }) {
   const [name, setName] = useState('');
   const [year, setYear] = useState('');
   const [major, setMajor] = useState('');
-  const [gender, setGender] = useState('');
+  const [genderOptions, setGenderOptions] = useState({
+    Male: false,
+    Female: false,
+    'Prefer not to say': false,
+    Other: false,
+  });
+
+  const toggleGenderOption = (option) => {
+    setGenderOptions((prev) => ({
+      ...prev,
+      [option]: !prev[option],
+    }));
+  };
 
   const handleContinue = () => {
-    console.log({ name, year, major, gender });
+    const selectedGenders = Object.keys(genderOptions).filter(
+      (opt) => genderOptions[opt]
+    );
+    console.log({ name, year, major, gender: selectedGenders });
     // navigation.navigate('NextScreen');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 1) Dark Green Header with curved bottom corners */}
+      {/* Dark Green Header */}
       <View style={styles.headerContainer}>
-        {/* 2) Centered Logo */}
         <Image source={logo} style={styles.logo} resizeMode="contain" />
       </View>
 
-      {/* 3) Main Form */}
+      {/* Main Form */}
       <View style={styles.formContainer}>
         <Text style={styles.label}>Full Name</Text>
         <TextInput
@@ -44,7 +56,6 @@ export default function SignUpScreen({ navigation }) {
           onChangeText={setName}
         />
 
-        {/* Year Picker */}
         <Text style={styles.label}>Year</Text>
         <View style={styles.pickerWrapper}>
           <Picker
@@ -61,7 +72,6 @@ export default function SignUpScreen({ navigation }) {
           </Picker>
         </View>
 
-        {/* Major Picker */}
         <Text style={styles.label}>Major</Text>
         <View style={styles.pickerWrapper}>
           <Picker
@@ -78,25 +88,25 @@ export default function SignUpScreen({ navigation }) {
           </Picker>
         </View>
 
-        {/* Gender Options */}
         <Text style={styles.label}>Gender</Text>
-        <View style={styles.radioGroup}>
-          {['Male', 'Female', 'Prefer not to say', 'Other'].map((option) => (
+        <View style={styles.checkboxGroup}>
+          {Object.keys(genderOptions).map((option) => (
             <TouchableOpacity
               key={option}
-              style={styles.radioButtonContainer}
-              onPress={() => setGender(option)}
+              style={styles.checkboxRow}
+              onPress={() => toggleGenderOption(option)}
+              activeOpacity={0.7}
             >
-              <View style={styles.radioCircle}>
-                {gender === option && <View style={styles.selectedRb} />}
+              <View style={styles.checkboxOuter}>
+                {genderOptions[option] && <View style={styles.checkboxInner} />}
               </View>
-              <Text style={styles.radioText}>{option}</Text>
+              <Text style={styles.checkboxLabel}>{option}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      {/* 4) Bottom Button Container */}
+      {/* Bottom Container with centered button */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity style={styles.button} onPress={handleContinue}>
           <Text style={styles.buttonText}>Continue</Text>
@@ -110,10 +120,8 @@ export default function SignUpScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF7E8', // Cream background
+    backgroundColor: '#FAF7E8',
   },
-
-  /* Header: 390 wide, 171 tall, dark green (#1F4035) with curved bottom corners */
   headerContainer: {
     width: '100%',
     height: 171,
@@ -123,13 +131,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  /* Adjust the logo size to your liking, ensure it's a transparent PNG. */
   logo: {
     width: 200,
     height: 80,
   },
-
-  /* Form area, spaced below the header */
   formContainer: {
     flex: 1,
     paddingHorizontal: 24,
@@ -141,7 +146,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    fontFamily: 'Montserrat', // Ensure Montserrat is properly loaded
+    fontFamily: 'Montserrat',
   },
   input: {
     height: 40,
@@ -164,59 +169,56 @@ const styles = StyleSheet.create({
     width: '100%',
     fontFamily: 'Montserrat',
   },
-
-  /* Gender radio */
-  radioGroup: {
+  checkboxGroup: {
     marginTop: 8,
     marginBottom: 20,
   },
-  radioButtonContainer: {
+  checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
   },
-  radioCircle: {
-    height: 20,
+  checkboxOuter: {
     width: 20,
-    borderRadius: 10,
+    height: 20,
     borderWidth: 2,
     borderColor: '#324B4A',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  selectedRb: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  checkboxInner: {
+    width: 12,
+    height: 12,
     backgroundColor: '#324B4A',
   },
-  radioText: {
+  checkboxLabel: {
     fontSize: 16,
     color: '#333',
     fontFamily: 'Montserrat',
   },
-
-  /* Bottom container with "Continue" button */
   bottomContainer: {
+    // Make a rounded green footer that spans the full width, with a centered button
     backgroundColor: '#1F4035',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingVertical: 20,
-    alignItems: 'center',
+    alignItems: 'center',     // center horizontally
+    justifyContent: 'center', // center vertically if needed
   },
   button: {
     backgroundColor: '#567870',
-    width: '80%',
     borderRadius: 30,
     height: 50,
+    width: '80%',           // a wider button so it looks centered and prominent
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
     color: '#FAF7E8',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     fontFamily: 'Montserrat',
+    textAlign: 'center',
   },
 });
