@@ -8,8 +8,10 @@ import {
   StyleSheet,
   SafeAreaView,
   Dimensions,
-  Platform,
 } from 'react-native';
+import * as Google from 'expo-google-app-auth';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 import logo from './logo.png'; // Adjust path to your logo
 
 // Screen width to help with responsive layout
@@ -19,9 +21,27 @@ export default function SignInScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    // TODO: Login logic or navigate to main screen
-    console.log('Login Pressed');
+  // Firebase Google Sign-In
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await Google.logInAsync({
+        clientId: 'YOUR_WEB_CLIENT_ID', // Replace with your Web Client ID from Firebase
+        scopes: ['profile', 'email'],
+      });
+
+      if (result.type === 'success') {
+        const credential = firebase.auth.GoogleAuthProvider.credential(result.idToken, result.accessToken);
+        await firebase.auth().signInWithCredential(credential);
+
+        // Redirect to SignIn page or show success
+        alert('Logged in with Google!');
+        navigation.navigate('SignIn');
+      } else {
+        console.log('Google login cancelled');
+      }
+    } catch (error) {
+      console.error('Google login error', error);
+    }
   };
 
   const handleSignUp = () => {
@@ -30,14 +50,11 @@ export default function SignInScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Green header with logo */}
       <View style={styles.topContainer}>
         <Image source={logo} style={styles.logo} resizeMode="contain" />
       </View>
 
-      {/* Main form area */}
       <View style={styles.formContainer}>
-        {/* Optional heading if your logo doesn't include text */}
         <Text style={styles.title}>Illini Swap</Text>
 
         {/* USERNAME */}
@@ -49,9 +66,6 @@ export default function SignInScreen({ navigation }) {
             onChangeText={setUsername}
             value={username}
           />
-          <TouchableOpacity>
-            <Text style={styles.forgotText}>Forgot Username?</Text>
-          </TouchableOpacity>
         </View>
 
         {/* PASSWORD */}
@@ -64,31 +78,18 @@ export default function SignInScreen({ navigation }) {
             onChangeText={setPassword}
             value={password}
           />
-          <TouchableOpacity>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
         </View>
 
         {/* LOGIN BUTTON */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <TouchableOpacity style={styles.loginButton}>
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
-        {/* SSO LABEL */}
-        <Text style={styles.ssoLabel}>Log In with SSO</Text>
-
-        {/* SSO ICONS (placeholders here) */}
-        <View style={styles.ssoIconsContainer}>
-          <TouchableOpacity style={styles.ssoIcon}>
-            <Text>G</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ssoIcon}>
-            <Text>I</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ssoIcon}>
-            <Text></Text>
-          </TouchableOpacity>
-        </View>
+        {/* GOOGLE SIGN-IN BUTTON */}
+        <Text style={styles.ssoLabel}>Log In with Google</Text>
+        <TouchableOpacity style={styles.ssoIcon} onPress={handleGoogleLogin}>
+          <Text style={styles.ssoIconText}>G</Text>
+        </TouchableOpacity>
 
         {/* SIGN UP BUTTON */}
         <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
@@ -99,7 +100,6 @@ export default function SignInScreen({ navigation }) {
   );
 }
 
-// ---- STYLES ----
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -107,13 +107,11 @@ const styles = StyleSheet.create({
   },
   topContainer: {
     backgroundColor: '#1F4035', // Dark green
-    height: 200,                // Adjust as needed for your design
+    height: 200, // Adjust as needed for your design
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    // On some Android devices, you might want a bit more spacing if you have a notch:
-    // paddingTop: Platform.OS === 'android' ? 10 : 0,
     marginBottom: 20,
   },
   logo: {
@@ -145,15 +143,9 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 16,
   },
-  forgotText: {
-    marginTop: 4,
-    color: '#FA8351', // Orange
-    fontSize: 14,
-  },
-  // LOGIN BUTTON (responsive approach: up to 343×56)
   loginButton: {
-    width: '90%',           // Use most of the screen width
-    maxWidth: 343,          // Don’t exceed 343px
+    width: '90%',
+    maxWidth: 343,
     height: 56,
     backgroundColor: '#1F4035',
     borderRadius: 8,
@@ -172,10 +164,6 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 16,
   },
-  ssoIconsContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
   ssoIcon: {
     width: 44,
     height: 44,
@@ -187,7 +175,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginHorizontal: 8,
   },
-  // SIGN UP BUTTON (bordered style)
+  ssoIconText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4285F4', // Google blue color
+  },
   signUpButton: {
     width: '90%',
     maxWidth: 343,

@@ -2,6 +2,19 @@
   "expo": {
     "name": "illini-swap",
     "slug": "illini-swap",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "scheme": "illiniswap", // OAuth redirect URI scheme
+    "platforms": ["ios", "android", "web"],
+    "ios": {
+      "bundleIdentifier": "com.illiniswap.illini-swap" // iOS bundle ID
+    },
+    "android": {
+      "package": "com.illiniswap.illini-swap" // Android package ID
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id" //need to copy over
+      }
+    }
   }
 }
