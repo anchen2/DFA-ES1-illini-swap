@@ -1,18 +1,16 @@
 import React from 'react';
 import { View, Image, TouchableOpacity, Text, StyleSheet, Dimensions } from 'react-native';
-// Make sure this path is correct for your logo file
 import logo from './logo.png';
 
 const { width, height } = Dimensions.get('window');
 
 const EntryScreen = ({ navigation }) => {
   const handleLoginPress = () => {
-    console.log("Login button pressed - route not set up yet");
+    navigation.navigate('SignIn'); // <-- Navigate to SignIn
   };
 
   return (
     <View style={styles.container}>
-      {/* Replace text with the Illini Swap logo */}
       <Image source={logo} style={styles.logo} resizeMode="contain" />
 
       <TouchableOpacity style={styles.loginButton} onPress={handleLoginPress}>
@@ -34,14 +32,14 @@ export default EntryScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1F4035', // Green background
+    backgroundColor: '#1F4035',
     justifyContent: 'center',
     alignItems: 'center',
   },
   logo: {
     width: 200,
     height: 80,
-    marginBottom: 40, // spacing above the buttons
+    marginBottom: 40,
   },
   loginButton: {
     backgroundColor: '#FCA26E',
