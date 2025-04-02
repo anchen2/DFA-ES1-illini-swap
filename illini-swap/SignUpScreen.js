@@ -35,7 +35,8 @@ export default function SignUpScreen({ navigation }) {
       (opt) => genderOptions[opt]
     );
     console.log({ name, year, major, gender: selectedGenders });
-    // navigation.navigate('NextScreen');
+    // Navigate to the Sign In screen after continuing from sign up.
+    navigation.navigate('Sign In');
   };
 
   return (
@@ -198,19 +199,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
   },
   bottomContainer: {
-    // Make a rounded green footer that spans the full width, with a centered button
     backgroundColor: '#1F4035',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingVertical: 20,
-    alignItems: 'center',     // center horizontally
-    justifyContent: 'center', // center vertically if needed
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   button: {
     backgroundColor: '#567870',
     borderRadius: 30,
     height: 50,
-    width: '80%',           // a wider button so it looks centered and prominent
+    width: '80%',
     alignItems: 'center',
     justifyContent: 'center',
   },

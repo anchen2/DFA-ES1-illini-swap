@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Image, TouchableOpacity, Text, StyleSheet, Dimensions } from 'react-native';
-// Make sure this path is correct for your logo file
 import logo from './logo.png';
 
 const { width, height } = Dimensions.get('window');
 
 const EntryScreen = ({ navigation }) => {
   const handleLoginPress = () => {
-    console.log("Login button pressed - route not set up yet");
+    // Navigate to the Sign In screen where the user can log in
+    navigation.navigate('Sign In');
   };
 
   return (
