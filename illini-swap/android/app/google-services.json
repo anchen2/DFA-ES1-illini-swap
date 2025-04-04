@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "607905388393",
+    "project_id": "illini-swap-founders",
+    "storage_bucket": "illini-swap-founders.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607905388393:android:b163aad1427841d8bb4ff8",
+        "android_client_info": {
+          "package_name": "com.illiniswap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCb30QNRQCw80w11K-HhJZmMD1hHc1GRt0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

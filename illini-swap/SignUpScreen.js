@@ -12,6 +12,10 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import logo from './logo.png';
 
+// 1) Import Firestore helpers
+import { db } from './firebaseConfig';            // <-- your config file
+import { collection, addDoc } from 'firebase/firestore';
+
 export default function SignUpScreen({ navigation }) {
   const [name, setName] = useState('');
   const [year, setYear] = useState('');
@@ -23,6 +27,7 @@ export default function SignUpScreen({ navigation }) {
     Other: false,
   });
 
+  // Toggle a checkbox-like selection for each gender option
   const toggleGenderOption = (option) => {
     setGenderOptions((prev) => ({
       ...prev,
@@ -30,13 +35,32 @@ export default function SignUpScreen({ navigation }) {
     }));
   };
 
-  const handleContinue = () => {
+  // 2) Handle "Continue" to store data in Firestore
+  const handleContinue = async () => {
     const selectedGenders = Object.keys(genderOptions).filter(
       (opt) => genderOptions[opt]
     );
     console.log({ name, year, major, gender: selectedGenders });
     // Navigate to the Sign In screen after continuing from sign up.
     navigation.navigate('Sign In');
+
+    // Save to Firestore (example: "users" collection)
+    try {
+      const docRef = await addDoc(collection(db, 'users'), {
+        name,
+        year,
+        major,
+        gender: selectedGenders,
+        createdAt: new Date(), // or serverTimestamp() if using from firebase.firestore
+      });
+      console.log('Document written with ID: ', docRef.id);
+
+      // Optionally navigate to next screen
+      // navigation.navigate('NextScreen');
+
+    } catch (error) {
+      console.error('Error adding document: ', error);
+    }
   };
 
   return (
