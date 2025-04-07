@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const itemImages = [
@@ -11,75 +18,205 @@ const itemImages = [
 
 const HomeScreen = () => {
   return (
-    <SafeAreaView className="flex-1 bg-[#FAF7E8]">
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Top Header */}
-        <View className="items-center mt-4">
-          <Text
-            className="text-[36px] font-medium text-black"
-            style={{ fontFamily: "Georgia" }} // GimletDisplay font replacement
-          >
-            Home
-          </Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerText}>Home</Text>
         </View>
 
         {/* Top Right Icons */}
-        <View className="absolute right-4 top-4 flex-row space-x-4">
-          <Image source={require("./icons/search.png")} className="w-[33px] h-[33px]" />
-          <Image source={require("./icons/comment-lines.png")} className="w-[33px] h-[33px]" />
+        <View style={styles.topIconsContainer}>
+          <Image
+            source={require("./icons/search.png")}
+            style={[styles.icon, { marginRight: 16 }]}
+          />
+          <Image
+            source={require("./icons/comment-lines.png")}
+            style={styles.icon}
+          />
         </View>
 
         {/* Environmental Fact Box */}
-        <View className="bg-[#1F4035] mx-auto mt-6 w-[342px] h-[180px] rounded-[20px] p-4 items-center justify-center">
-          <Text className="text-white font-semibold text-[22px]">Environmental Fact</Text>
-          <Text className="text-white font-medium text-[16px] mt-2 text-center">
+        <View style={styles.factBox}>
+          <Text style={styles.factTitle}>Environmental Fact</Text>
+          <Text style={styles.factText}>
             Every year, around 92 million tons of clothing are discarded globally,
             equivalent to one garbage truck of clothes being dumped in a landfill every second.
           </Text>
         </View>
 
         {/* Categories */}
-        <Text className="text-[22px] font-semibold text-[#13281F] text-center mt-6">Categories</Text>
-        <View className="mt-3 px-6 flex-row flex-wrap gap-x-[13px]">
+        <Text style={styles.categoriesTitle}>Categories</Text>
+        <View style={styles.categoriesContainer}>
           {["Clothing", "Books", "Tech", "Misc"].map((label, index) => (
-            <TouchableOpacity key={index} className="bg-[#FCA26E] rounded-[20px] px-[18px] py-[8px]">
-              <Text className="text-black font-medium">{label}</Text>
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.categoryButton,
+                { marginRight: 13, marginBottom: 13 },
+              ]}
+            >
+              <Text style={styles.categoryText}>{label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Listings Grid */}
-        <View className="mt-6 flex-row flex-wrap justify-center gap-x-4 gap-y-4 px-4">
+        <View style={styles.listingsContainer}>
           {itemImages.map((img, idx) => (
             <TouchableOpacity
               key={idx}
-              className="w-[164px] p-[19px]"
+              style={[styles.listingBox, { marginRight: 16, marginBottom: 16 }]}
               onPress={() => console.log("Go to item")}
             >
               <Image
                 source={img}
-                className="w-full h-[203px] rounded-[10px]"
+                style={styles.listingImage}
                 resizeMode="cover"
               />
-              <Text className="mt-[6px] font-medium text-[#13281F] text-[16px] text-center">
-                Listing Name
-              </Text>
-              <Text className="font-medium text-[#13281F] text-[16px] text-center">$10</Text>
+              <Text style={styles.listingTitle}>Listing Name</Text>
+              <Text style={styles.listingPrice}>$10</Text>
             </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
 
       {/* Bottom Nav Bar */}
-      <View className="absolute bottom-0 left-0 right-0 h-[75px] bg-[#13281F] flex-row justify-around items-center rounded-t-[25px] px-2">
-        <Image source={require("./icons/nav-tag.png")} className="w-[33px] h-[33px]" />
-        <Image source={require("./icons/nav-heart.png")} className="w-[33px] h-[33px]" />
-        <Image source={require("./icons/nav-home.png")} className="w-[33px] h-[33px]" />
-        <Image source={require("./icons/nav-pending.png")} className="w-[33px] h-[33px]" />
-        <Image source={require("./icons/nav-user-square.png")} className="w-[33px] h-[33px]" />
+      <View style={styles.navBar}>
+        <Image source={require("./icons/nav-tag.png")} style={styles.icon} />
+        <Image source={require("./icons/nav-heart.png")} style={styles.icon} />
+        <Image source={require("./icons/nav-home.png")} style={styles.icon} />
+        <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
+        <Image
+          source={require("./icons/nav-user-square.png")}
+          style={styles.icon}
+        />
       </View>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FAF7E8",
+  },
+  scrollContainer: {
+    paddingBottom: 140, // Increased padding for nav bar
+    flexGrow: 1, // Enables scroll when content is short
+  },
+  headerContainer: {
+    marginTop: 16,
+    alignItems: "center",
+  },
+  headerText: {
+    fontSize: 36,
+    fontWeight: "500",
+    color: "#000000",
+    fontFamily: "Georgia",
+  },
+  topIconsContainer: {
+    position: "absolute",
+    right: 16,
+    top: 16,
+    flexDirection: "row",
+  },
+  icon: {
+    width: 33,
+    height: 33,
+  },
+  factBox: {
+    backgroundColor: "#1F4035",
+    width: 342,
+    height: 180,
+    borderRadius: 20,
+    padding: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    marginTop: 24,
+  },
+  factTitle: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "600",
+  },
+  factText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
+    marginTop: 8,
+  },
+  categoriesTitle: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#13281F",
+    textAlign: "center",
+    marginTop: 24,
+  },
+  categoriesContainer: {
+    marginTop: 12,
+    paddingHorizontal: 24,
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  categoryButton: {
+    backgroundColor: "#FCA26E",
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+  },
+  categoryText: {
+    color: "black",
+    fontWeight: "500",
+  },
+  listingsContainer: {
+    marginTop: 24,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  listingBox: {
+    width: 164,
+    padding: 19,
+  },
+  listingImage: {
+    width: "100%",
+    height: 203,
+    borderRadius: 10,
+  },
+  listingTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#13281F",
+    textAlign: "center",
+    marginTop: 6,
+  },
+  listingPrice: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#13281F",
+    textAlign: "center",
+  },
+  navBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 75,
+    backgroundColor: "#13281F",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingTop: 14,
+    paddingBottom: 22,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+});
 
 export default HomeScreen;
