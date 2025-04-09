@@ -16,7 +16,7 @@ const itemImages = [
   require("./images/item4.png"),
 ];
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -52,10 +52,7 @@ const HomeScreen = () => {
           {["Clothing", "Books", "Tech", "Misc"].map((label, index) => (
             <TouchableOpacity
               key={index}
-              style={[
-                styles.categoryButton,
-                { marginRight: 13, marginBottom: 13 },
-              ]}
+              style={[styles.categoryButton, { marginRight: 13, marginBottom: 13 }]}
             >
               <Text style={styles.categoryText}>{label}</Text>
             </TouchableOpacity>
@@ -68,13 +65,21 @@ const HomeScreen = () => {
             <TouchableOpacity
               key={idx}
               style={[styles.listingBox, { marginRight: 16, marginBottom: 16 }]}
-              onPress={() => console.log("Go to item")}
+              onPress={() =>
+                navigation.navigate("Item", {
+                  image: img,
+                  title: "Item Name",
+                  price: "$20.00",
+                  seller: {
+                    name: "Lucas Ness",
+                    rating: 4,
+                    sold: 15,
+                    active: "Active Today",
+                  },
+                })
+              }
             >
-              <Image
-                source={img}
-                style={styles.listingImage}
-                resizeMode="cover"
-              />
+              <Image source={img} style={styles.listingImage} resizeMode="cover" />
               <Text style={styles.listingTitle}>Listing Name</Text>
               <Text style={styles.listingPrice}>$10</Text>
             </TouchableOpacity>
@@ -88,10 +93,7 @@ const HomeScreen = () => {
         <Image source={require("./icons/nav-heart.png")} style={styles.icon} />
         <Image source={require("./icons/nav-home.png")} style={styles.icon} />
         <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
-        <Image
-          source={require("./icons/nav-user-square.png")}
-          style={styles.icon}
-        />
+        <Image source={require("./icons/nav-user-square.png")} style={styles.icon} />
       </View>
     </SafeAreaView>
   );
@@ -103,8 +105,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAF7E8",
   },
   scrollContainer: {
-    paddingBottom: 140, // Increased padding for nav bar
-    flexGrow: 1, // Enables scroll when content is short
+    paddingBottom: 140,
+    flexGrow: 1,
   },
   headerContainer: {
     marginTop: 16,
