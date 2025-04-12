@@ -10,6 +10,7 @@ import EntryScreen from './EntryScreen';
 import SignUpScreen from './SignUpScreen';
 import SignInScreen from './SignInScreen';
 import HomeScreen from './HomeScreen';
+import FavoritesScreen from './FavoritesScreen';
 
 // Or if you prefer older React Navigation 4 syntax: createAppContainer, etc.
 const Stack = createStackNavigator();
@@ -23,6 +24,7 @@ export default function App() {
         {/* Notice the name is “SignUp” rather than “Sign Up” to avoid spacing issues */}
         <Stack.Screen name="Sign Up" component={SignUpScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Favorites" component={FavoritesScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
