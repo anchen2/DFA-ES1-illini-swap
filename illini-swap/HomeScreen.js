@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native"; // <== added for navigation
 
 const itemImages = [
   require("./images/item1.png"),
@@ -17,6 +18,8 @@ const itemImages = [
 ];
 
 const HomeScreen = () => {
+  const navigation = useNavigation(); // <== navigation hook
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -85,13 +88,14 @@ const HomeScreen = () => {
       {/* Bottom Nav Bar */}
       <View style={styles.navBar}>
         <Image source={require("./icons/nav-tag.png")} style={styles.icon} />
-        <Image source={require("./icons/nav-heart.png")} style={styles.icon} />
+        
+        <TouchableOpacity onPress={() => navigation.navigate("Favorites")}>
+          <Image source={require("./icons/nav-heart.png")} style={styles.icon} />
+        </TouchableOpacity>
+
         <Image source={require("./icons/nav-home.png")} style={styles.icon} />
         <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
-        <Image
-          source={require("./icons/nav-user-square.png")}
-          style={styles.icon}
-        />
+        <Image source={require("./icons/nav-user-square.png")} style={styles.icon} />
       </View>
     </SafeAreaView>
   );
@@ -103,8 +107,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAF7E8",
   },
   scrollContainer: {
-    paddingBottom: 140, // Increased padding for nav bar
-    flexGrow: 1, // Enables scroll when content is short
+    paddingBottom: 140,
+    flexGrow: 1,
   },
   headerContainer: {
     marginTop: 16,
