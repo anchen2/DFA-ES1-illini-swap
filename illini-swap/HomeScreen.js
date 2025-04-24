@@ -27,10 +27,15 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Top Right Icons */}
         <View style={styles.topIconsContainer}>
-          <Image
-            source={require("./icons/search.png")}
-            style={[styles.icon, { marginRight: 16 }]}
-          />
+          <TouchableOpacity
+                  onPress={() => navigation.navigate("Search")}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} // optional: enlarges tap area
+          >
+              <Image
+                source={require("./icons/search.png")}
+                style={[styles.icon, { marginRight: 16 }]}
+              />
+          </TouchableOpacity>
           <Image
             source={require("./icons/comment-lines.png")}
             style={styles.icon}
