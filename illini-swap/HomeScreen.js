@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native"; // <== added for navigation
 
 const itemImages = [
   require("./images/item1.png"),
@@ -16,7 +17,10 @@ const itemImages = [
   require("./images/item4.png"),
 ];
 
-const HomeScreen = ({ navigation }) => {
+
+const HomeScreen = () => {
+  const navigation = useNavigation(); // <== navigation hook
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -95,7 +99,11 @@ const HomeScreen = ({ navigation }) => {
       {/* Bottom Nav Bar */}
       <View style={styles.navBar}>
         <Image source={require("./icons/nav-tag.png")} style={styles.icon} />
-        <Image source={require("./icons/nav-heart.png")} style={styles.icon} />
+        
+        <TouchableOpacity onPress={() => navigation.navigate("Favorites")}>
+          <Image source={require("./icons/nav-heart.png")} style={styles.icon} />
+        </TouchableOpacity>
+
         <Image source={require("./icons/nav-home.png")} style={styles.icon} />
         <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
         <Image source={require("./icons/nav-user-square.png")} style={styles.icon} />
