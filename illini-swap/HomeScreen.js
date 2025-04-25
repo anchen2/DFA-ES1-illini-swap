@@ -17,6 +17,7 @@ const initialItems = [
   { source: require("./images/item4.png"), title: "Listing Name", price: "$10" },
 ];
 
+
 const HomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -49,10 +50,15 @@ const HomeScreen = () => {
 
         {/* Top Right Icons */}
         <View style={styles.topIconsContainer}>
-          <Image
-            source={require("./icons/search.png")}
-            style={[styles.icon, { marginRight: 16 }]}
-          />
+          <TouchableOpacity
+                  onPress={() => navigation.navigate("Search")}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} // optional: enlarges tap area
+          >
+              <Image
+                source={require("./icons/search.png")}
+                style={[styles.icon, { marginRight: 16 }]}
+              />
+          </TouchableOpacity>
           <Image
             source={require("./icons/comment-lines.png")}
             style={styles.icon}
@@ -74,10 +80,7 @@ const HomeScreen = () => {
           {["Clothing", "Books", "Tech", "Misc"].map((label, index) => (
             <TouchableOpacity
               key={index}
-              style={[
-                styles.categoryButton,
-                { marginRight: 13, marginBottom: 13 },
-              ]}
+              style={[styles.categoryButton, { marginRight: 13, marginBottom: 13 }]}
             >
               <Text style={styles.categoryText}>{label}</Text>
             </TouchableOpacity>
@@ -86,8 +89,9 @@ const HomeScreen = () => {
 
         {/* Listings Grid */}
         <View style={styles.listingsContainer}>
+
           {listings.map((item, idx) => {
-            const firstImage = item.images?.[0] ?? item.source;
+            const firstImage = item.images?.[0] ?? item.source;a
             const imgSrc = typeof firstImage === "string"
               ? { uri: firstImage }
               : firstImage;
@@ -103,6 +107,30 @@ const HomeScreen = () => {
               </TouchableOpacity>
             );
             })}
+          {itemImages.map((img, idx) => (
+            <TouchableOpacity
+              key={idx}
+              style={[styles.listingBox, { marginRight: 16, marginBottom: 16 }]}
+              onPress={() =>
+                navigation.navigate("Item", {
+                  image: img,
+                  title: "Item Name",
+                  price: "$20.00",
+                  seller: {
+                    name: "Lucas Ness",
+                    rating: 4,
+                    sold: 15,
+                    active: "Active Today",
+                  },
+                })
+              }
+            >
+              <Image source={img} style={styles.listingImage} resizeMode="cover" />
+              <Text style={styles.listingTitle}>Listing Name</Text>
+              <Text style={styles.listingPrice}>$10</Text>
+            </TouchableOpacity>
+          ))}
+
         </View>
       </ScrollView>
 

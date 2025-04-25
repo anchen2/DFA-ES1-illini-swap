@@ -1,7 +1,16 @@
 {
   "expo": {
+    "scheme": "illini-swap",
     "name": "illini-swap",
     "slug": "illini-swap",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "0d9d9abd-02f3-45fa-a4fd-5696b58b6e61"
+      }
+    },
+    "android": {
+      "package": "com.oshah.illiniswap"
+    }
   }
 }

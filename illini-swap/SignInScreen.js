@@ -1,167 +1,154 @@
 import React, { useState } from 'react';
 import {
-  View,
   Text,
+  View,
   TextInput,
   TouchableOpacity,
-  Image,
   StyleSheet,
   SafeAreaView,
-  Dimensions,
-  Platform,
 } from 'react-native';
-import logo from './logo.png'; // Adjust path to your logo
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './firebaseConfig';
+import { useGoogleAuth } from './GoogleSignIn';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesome } from '@expo/vector-icons';
 
-// Screen width to help with responsive layout
-const { width } = Dimensions.get('window');
-
-export default function SignInScreen({ navigation }) {
-  const [username, setUsername] = useState('');
+export default function SignInScreen() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const navigation = useNavigation();
 
-  const handleLogin = () => {
-    // TODO: Replace this with real authentication logic if needed.
-    // For now, we simulate a successful login by navigating to the Home screen.
-    console.log('Login Pressed');
-    navigation.navigate('Home');
-  };
+  const { promptAsync } = useGoogleAuth(navigation);
 
-  const handleSignUp = () => {
-    navigation.navigate('Sign Up');
+  const handleLogin = async () => {
+    try {
+      setErrorMessage('');
+      await signInWithEmailAndPassword(auth, email, password);
+      navigation.navigate('Home');
+    } catch (error) {
+      setErrorMessage('Incorrect email or password.');
+      console.error('Login Error:', error.message);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Green header with logo */}
-      <View style={styles.topContainer}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
+      <View style={styles.header}>
+        <Text style={styles.title}>Illini</Text>
+        <Text style={styles.title}>Swap</Text>
       </View>
 
-      {/* Main form area */}
-      <View style={styles.formContainer}>
-        {/* Optional heading if your logo doesn't include text */}
-        <Text style={styles.title}>Illini Swap</Text>
+      <View style={styles.inputContainer}>
+        {errorMessage !== '' && (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        )}
 
-        {/* USERNAME */}
         <View style={styles.inputWrapper}>
+          <FontAwesome name="user-o" size={18} color="#567870" style={styles.icon} />
           <TextInput
             style={styles.input}
             placeholder="Username"
-            placeholderTextColor="#999"
-            onChangeText={setUsername}
-            value={username}
+            placeholderTextColor="#567870"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
           />
-          <TouchableOpacity>
-            <Text style={styles.forgotText}>Forgot Username?</Text>
-          </TouchableOpacity>
         </View>
+        <Text style={styles.forgotText}>Forgot Username?</Text>
 
-        {/* PASSWORD */}
         <View style={styles.inputWrapper}>
+          <FontAwesome name="lock" size={18} color="#567870" style={styles.icon} />
           <TextInput
             style={styles.input}
             placeholder="Password"
-            placeholderTextColor="#999"
+            placeholderTextColor="#567870"
             secureTextEntry
-            onChangeText={setPassword}
             value={password}
+            onChangeText={setPassword}
           />
-          <TouchableOpacity>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
         </View>
+        <Text style={styles.forgotText}>Forgot Password?</Text>
+      </View>
 
-        {/* LOGIN BUTTON */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Login</Text>
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <Text style={styles.loginButtonText}>Login</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.ssoLabel}>Log In with SSO</Text>
+
+      <View style={styles.ssoContainer}>
+        <TouchableOpacity style={styles.ssoIcon} onPress={promptAsync}>
+          <Text style={styles.ssoText}>G</Text>
         </TouchableOpacity>
+      </View>
 
-        {/* SSO LABEL */}
-        <Text style={styles.ssoLabel}>Log In with SSO</Text>
-
-        {/* SSO ICONS (placeholders here) */}
-        <View style={styles.ssoIconsContainer}>
-          <TouchableOpacity style={styles.ssoIcon}>
-            <Text>G</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ssoIcon}>
-            <Text>I</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ssoIcon}>
-            <Text></Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* SIGN UP BUTTON */}
-        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-          <Text style={styles.signUpButtonText}>Sign Up</Text>
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.signUpButton} onPress={() => navigation.navigate('Sign Up')}>
+          <Text style={styles.signUpText}>Sign up</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
-// ---- STYLES ----
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F2E6', // Cream background
-  },
-  topContainer: {
-    backgroundColor: '#1F4035', // Dark green
-    height: 200, // Adjust as needed for your design
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    alignItems: 'center',
+    backgroundColor: '#FAF7E8',
     justifyContent: 'center',
-    // On some Android devices, you might want a bit more spacing if you have a notch:
-    // paddingTop: Platform.OS === 'android' ? 10 : 0,
-    marginBottom: 20,
+    paddingHorizontal: 5, // 38px total margin in (19px each side)
   },
-  logo: {
-    width: 160,
-    height: 80,
-  },
-  formContainer: {
-    flex: 1,
+  header: {
     alignItems: 'center',
-    paddingHorizontal: 24,
+    marginBottom: 40,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#324B4A',
-    marginBottom: 20,
+    fontSize: 48,
+    fontWeight: '800',
+    color: '#1F4035',
+    fontFamily: 'Georgia',
+  },
+  inputContainer: {
+    marginHorizontal: 14,
   },
   inputWrapper: {
-    width: '100%',
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF7E8',
+    borderColor: '#567870',
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    marginBottom: 4,
+  },
+  icon: {
+    marginRight: 8,
   },
   input: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#CCC',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: '#333',
-    fontSize: 16,
+    flex: 1,
+    height: 50,
+    color: '#000',
   },
   forgotText: {
-    marginTop: 4,
-    color: '#FA8351', // Orange
+    color: '#EC8C5D',
+    fontSize: 12,
+    marginBottom: 12,
+    marginLeft: 8,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 10,
     fontSize: 14,
   },
-  // LOGIN BUTTON (responsive approach: up to 343×56)
   loginButton: {
-    width: '90%', // Use most of the screen width
-    maxWidth: 343, // Don’t exceed 343px
-    height: 56,
     backgroundColor: '#1F4035',
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 20,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 16,
+    marginVertical: 10,
+    marginHorizontal: 14,
   },
   loginButtonText: {
     color: '#FAF7E8',
@@ -169,40 +156,39 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   ssoLabel: {
-    marginTop: 10,
-    marginBottom: 8,
-    color: '#333',
-    fontSize: 16,
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#1F4035',
+    marginVertical: 10,
   },
-  ssoIconsContainer: {
+  ssoContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 20,
   },
   ssoIcon: {
-    width: 44,
-    height: 44,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#CCC',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: 10,
+    backgroundColor: '#eee',
+    padding: 12,
+    borderRadius: 50,
   },
-  // SIGN UP BUTTON (bordered style)
+  ssoText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  footer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   signUpButton: {
-    width: '90%',
-    maxWidth: 343,
-    height: 56,
-    borderColor: '#1F4035',
-    borderWidth: 2,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#EC8C5D',
+    paddingVertical: 12,
+    paddingHorizontal: 60,
+    borderRadius: 30,
   },
-  signUpButtonText: {
+  signUpText: {
     color: '#1F4035',
-    fontSize: 18,
     fontWeight: '600',
+    fontSize: 16,
   },
 });
