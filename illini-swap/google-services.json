@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "607905388393",
+    "project_id": "illini-swap-founders",
+    "storage_bucket": "illini-swap-founders.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607905388393:android:b163aad1427841d8bb4ff8",
+        "android_client_info": {
+          "package_name": "com.illiniswap"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "607905388393-ljpblg3jpigtt5789svhlsfko4vlkqvg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.illiniswap",
+            "certificate_hash": "decc3d037365e5cc84083f3ca6141c4fd7bdbe20"
+          }
+        },
+        {
+          "client_id": "607905388393-qfpjldb1j4bmhkrikucl4koeuu9450h2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCb30QNRQCw80w11K-HhJZmMD1hHc1GRt0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "607905388393-qfpjldb1j4bmhkrikucl4koeuu9450h2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "607905388393-2mb8955j845kjlvlpq73ldet4l6126s8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.illiniswap"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

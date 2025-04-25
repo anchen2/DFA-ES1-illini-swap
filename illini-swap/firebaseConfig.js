@@ -1,21 +1,24 @@
-// firebaseConfig.js
+// Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-// or import { getDatabase } from 'firebase/database'; if using Realtime DB
+// If you're using other services (like Storage or Realtime Database), import them as needed
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
+  apiKey: 'AIzaSyBztslYW_0wNBYTwzEaf08iz2g_CZtAvmo',
   authDomain: 'illini-swap-founders.firebaseapp.com',
   projectId: 'illini-swap-founders',
-  storageBucket: 'illini-swap-founders.appspot.com',
+  storageBucket: 'illini-swap-founders.firebasestorage.app',
   messagingSenderId: '607905388393',
-  appId: '1:607905388393:android:b163aad1427841d8bb4ff8',
+  appId: '1:607905388393:web:e5350e1ea02b474abb4ff8', // Keep this for the web
+  measurementId: 'G-PN4WHR58LC' // Optional, only if you plan to use analytics
 };
 
-// Initialize the Firebase app
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Export Firebase services you plan to use
+// Export the Firebase services you're using
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+// Add exports for other Firebase services you may be using (e.g., Storage, Realtime Database)
