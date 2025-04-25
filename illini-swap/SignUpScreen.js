@@ -7,141 +7,92 @@ import {
   Image,
   StyleSheet,
   SafeAreaView,
-  Platform,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { auth, db } from './firebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import logo from './logo.png';
 
-// 1) Import Firestore helpers
-import { db } from './firebaseConfig';            // <-- your config file
-import { collection, addDoc } from 'firebase/firestore';
-
 export default function SignUpScreen({ navigation }) {
-  const [name, setName] = useState('');
-  const [year, setYear] = useState('');
-  const [major, setMajor] = useState('');
-  const [genderOptions, setGenderOptions] = useState({
-    Male: false,
-    Female: false,
-    'Prefer not to say': false,
-    Other: false,
-  });
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  // Toggle a checkbox-like selection for each gender option
-  const toggleGenderOption = (option) => {
-    setGenderOptions((prev) => ({
-      ...prev,
-      [option]: !prev[option],
-    }));
-  };
+  const handleSignUp = () => {
+    setError(''); // Clear existing error
 
-  // 2) Handle "Continue" to store data in Firestore
-  const handleContinue = async () => {
-    const selectedGenders = Object.keys(genderOptions).filter(
-      (opt) => genderOptions[opt]
-    );
-    console.log({ name, year, major, gender: selectedGenders });
-    // Navigate to the Sign In screen after continuing from sign up.
-    navigation.navigate('Sign In');
-
-    // Save to Firestore (example: "users" collection)
-    try {
-      const docRef = await addDoc(collection(db, 'users'), {
-        name,
-        year,
-        major,
-        gender: selectedGenders,
-        createdAt: new Date(), // or serverTimestamp() if using from firebase.firestore
-      });
-      console.log('Document written with ID: ', docRef.id);
-
-      // Optionally navigate to next screen
-      // navigation.navigate('NextScreen');
-
-    } catch (error) {
-      console.error('Error adding document: ', error);
+    if (!email.endsWith('@illinois.edu')) {
+      setError('Please use your @illinois.edu email address.');
+      return;
     }
+
+    navigation.navigate('Sign In'); // Navigate immediately
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        return setDoc(doc(db, 'users', user.uid), {
+          fullName,
+          email,
+          createdAt: new Date(),
+        });
+      })
+      .catch((err) => {
+        if (err.code === 'auth/email-already-in-use') {
+          setError('User already exists with this email.');
+        } else {
+          console.error('Sign up error:', err);
+          setError('Sign up failed. Try again.');
+        }
+      });
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Dark Green Header */}
       <View style={styles.headerContainer}>
         <Image source={logo} style={styles.logo} resizeMode="contain" />
       </View>
 
-      {/* Main Form */}
       <View style={styles.formContainer}>
         <Text style={styles.label}>Full Name</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter your name"
-          placeholderTextColor="#999"
-          value={name}
-          onChangeText={setName}
+          placeholder="Enter your full name"
+          value={fullName}
+          onChangeText={setFullName}
         />
 
-        <Text style={styles.label}>Year</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={year}
-            style={styles.picker}
-            onValueChange={(val) => setYear(val)}
-          >
-            <Picker.Item label="Select your year" value="" />
-            <Picker.Item label="Freshman" value="Freshman" />
-            <Picker.Item label="Sophomore" value="Sophomore" />
-            <Picker.Item label="Junior" value="Junior" />
-            <Picker.Item label="Senior" value="Senior" />
-            <Picker.Item label="Graduate" value="Graduate" />
-          </Picker>
-        </View>
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        {error && <Text style={styles.error}>{error}</Text>}
 
-        <Text style={styles.label}>Major</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={major}
-            style={styles.picker}
-            onValueChange={(val) => setMajor(val)}
-          >
-            <Picker.Item label="Select your major" value="" />
-            <Picker.Item label="Computer Science" value="CS" />
-            <Picker.Item label="Engineering" value="Engineering" />
-            <Picker.Item label="Business" value="Business" />
-            <Picker.Item label="Biology" value="Biology" />
-            <Picker.Item label="Other" value="Other" />
-          </Picker>
-        </View>
-
-        <Text style={styles.label}>Gender</Text>
-        <View style={styles.checkboxGroup}>
-          {Object.keys(genderOptions).map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={styles.checkboxRow}
-              onPress={() => toggleGenderOption(option)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.checkboxOuter}>
-                {genderOptions[option] && <View style={styles.checkboxInner} />}
-              </View>
-              <Text style={styles.checkboxLabel}>{option}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
       </View>
 
-      {/* Bottom Container with centered button */}
       <View style={styles.bottomContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleContinue}>
-          <Text style={styles.buttonText}>Continue</Text>
+        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+          <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
-// STYLES
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -182,44 +133,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     fontFamily: 'Montserrat',
   },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: '#CCC',
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  picker: {
-    height: Platform.OS === 'ios' ? 180 : 50,
-    width: '100%',
-    fontFamily: 'Montserrat',
-  },
-  checkboxGroup: {
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  checkboxOuter: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    borderColor: '#324B4A',
-    marginRight: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxInner: {
-    width: 12,
-    height: 12,
-    backgroundColor: '#324B4A',
-  },
-  checkboxLabel: {
-    fontSize: 16,
-    color: '#333',
+  error: {
+    color: 'red',
+    fontSize: 14,
+    marginTop: 4,
     fontFamily: 'Montserrat',
   },
   bottomContainer: {
