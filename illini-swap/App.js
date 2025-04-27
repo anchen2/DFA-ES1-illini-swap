@@ -14,12 +14,14 @@ import ItemScreen from './ItemScreen';
 import SearchScreen from "./SearchScreen";
 
 import FavoritesScreen from './FavoritesScreen';
+import { FavoritesProvider } from "./FavoritesContext";
 
 
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
+    <FavoritesProvider>
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Entry" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Entry" component={EntryScreen} />
@@ -32,5 +34,6 @@ export default function App() {
         <Stack.Screen name="Favorites" component={FavoritesScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+    </FavoritesProvider>
   );
 }

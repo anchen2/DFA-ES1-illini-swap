@@ -8,18 +8,19 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native"; // <== added for navigation
+import { useNavigation } from "@react-navigation/native";
+import { useFavorites } from "./FavoritesContext"; // <== Import context!
 
-const itemImages = [
-  require("./images/item1.png"),
-  require("./images/item2.png"),
-  require("./images/item3.png"),
-  require("./images/item4.png"),
+const itemData = [
+  { id: 1, image: require("./images/item1.png"), title: "Item 1" },
+  { id: 2, image: require("./images/item2.png"), title: "Item 2" },
+  { id: 3, image: require("./images/item3.png"), title: "Item 3" },
+  { id: 4, image: require("./images/item4.png"), title: "Item 4" },
 ];
 
-
 const HomeScreen = () => {
-  const navigation = useNavigation(); // <== navigation hook
+  const navigation = useNavigation();
+  const { favorites, toggleFavorite } = useFavorites(); // <== Use context!
 
   return (
     <SafeAreaView style={styles.container}>
@@ -32,18 +33,15 @@ const HomeScreen = () => {
         {/* Top Right Icons */}
         <View style={styles.topIconsContainer}>
           <TouchableOpacity
-                  onPress={() => navigation.navigate("Search")}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} // optional: enlarges tap area
+            onPress={() => navigation.navigate("Search")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-              <Image
-                source={require("./icons/search.png")}
-                style={[styles.icon, { marginRight: 16 }]}
-              />
+            <Image
+              source={require("./icons/search.png")}
+              style={[styles.icon, { marginRight: 16 }]}
+            />
           </TouchableOpacity>
-          <Image
-            source={require("./icons/comment-lines.png")}
-            style={styles.icon}
-          />
+          <Image source={require("./icons/comment-lines.png")} style={styles.icon} />
         </View>
 
         {/* Environmental Fact Box */}
@@ -70,14 +68,14 @@ const HomeScreen = () => {
 
         {/* Listings Grid */}
         <View style={styles.listingsContainer}>
-          {itemImages.map((img, idx) => (
+          {itemData.map((item) => (
             <TouchableOpacity
-              key={idx}
+              key={item.id}
               style={[styles.listingBox, { marginRight: 16, marginBottom: 16 }]}
               onPress={() =>
                 navigation.navigate("Item", {
-                  image: img,
-                  title: "Item Name",
+                  image: item.image,
+                  title: item.title,
                   price: "$20.00",
                   seller: {
                     name: "Lucas Ness",
@@ -88,9 +86,21 @@ const HomeScreen = () => {
                 })
               }
             >
-              <Image source={img} style={styles.listingImage} resizeMode="cover" />
-              <Text style={styles.listingTitle}>Listing Name</Text>
-              <Text style={styles.listingPrice}>$10</Text>
+              <Image source={item.image} style={styles.listingImage} resizeMode="cover" />
+              <Text style={styles.listingTitle}>{item.title}</Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
+                <Text style={styles.listingPrice}>$10</Text>
+                <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
+                  <Image
+                    source={
+                      favorites[item.id]
+                        ? require("./icons/filled_heart.png")
+                        : require("./icons/hollow-heart.png")
+                    }
+                    style={{ width: 21, height: 21, resizeMode: "contain" }}
+                  />
+                </TouchableOpacity>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -99,11 +109,9 @@ const HomeScreen = () => {
       {/* Bottom Nav Bar */}
       <View style={styles.navBar}>
         <Image source={require("./icons/nav-tag.png")} style={styles.icon} />
-        
         <TouchableOpacity onPress={() => navigation.navigate("Favorites")}>
           <Image source={require("./icons/nav-heart.png")} style={styles.icon} />
         </TouchableOpacity>
-
         <Image source={require("./icons/nav-home.png")} style={styles.icon} />
         <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
         <Image source={require("./icons/nav-user-square.png")} style={styles.icon} />
@@ -113,34 +121,12 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FAF7E8",
-  },
-  scrollContainer: {
-    paddingBottom: 140,
-    flexGrow: 1,
-  },
-  headerContainer: {
-    marginTop: 16,
-    alignItems: "center",
-  },
-  headerText: {
-    fontSize: 36,
-    fontWeight: "500",
-    color: "#000000",
-    fontFamily: "Georgia",
-  },
-  topIconsContainer: {
-    position: "absolute",
-    right: 16,
-    top: 16,
-    flexDirection: "row",
-  },
-  icon: {
-    width: 33,
-    height: 33,
-  },
+  container: { flex: 1, backgroundColor: "#FAF7E8" },
+  scrollContainer: { paddingBottom: 140, flexGrow: 1 },
+  headerContainer: { marginTop: 16, alignItems: "center" },
+  headerText: { fontSize: 36, fontWeight: "500", color: "#000", fontFamily: "Georgia" },
+  topIconsContainer: { position: "absolute", right: 16, top: 16, flexDirection: "row" },
+  icon: { width: 33, height: 33 },
   factBox: {
     backgroundColor: "#1F4035",
     width: 342,
@@ -152,70 +138,17 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginTop: 24,
   },
-  factTitle: {
-    color: "white",
-    fontSize: 22,
-    fontWeight: "600",
-  },
-  factText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "500",
-    textAlign: "center",
-    marginTop: 8,
-  },
-  categoriesTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#13281F",
-    textAlign: "center",
-    marginTop: 24,
-  },
-  categoriesContainer: {
-    marginTop: 12,
-    paddingHorizontal: 24,
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  categoryButton: {
-    backgroundColor: "#FCA26E",
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-  },
-  categoryText: {
-    color: "black",
-    fontWeight: "500",
-  },
-  listingsContainer: {
-    marginTop: 24,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-  listingBox: {
-    width: 164,
-    padding: 19,
-  },
-  listingImage: {
-    width: "100%",
-    height: 203,
-    borderRadius: 10,
-  },
-  listingTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#13281F",
-    textAlign: "center",
-    marginTop: 6,
-  },
-  listingPrice: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#13281F",
-    textAlign: "center",
-  },
+  factTitle: { color: "white", fontSize: 22, fontWeight: "600" },
+  factText: { color: "white", fontSize: 16, fontWeight: "500", textAlign: "center", marginTop: 8 },
+  categoriesTitle: { fontSize: 22, fontWeight: "600", color: "#13281F", textAlign: "center", marginTop: 24 },
+  categoriesContainer: { marginTop: 12, paddingHorizontal: 24, flexDirection: "row", flexWrap: "wrap" },
+  categoryButton: { backgroundColor: "#FCA26E", borderRadius: 20, paddingHorizontal: 18, paddingVertical: 8 },
+  categoryText: { color: "black", fontWeight: "500" },
+  listingsContainer: { marginTop: 24, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", paddingHorizontal: 16 },
+  listingBox: { width: 164, padding: 19 },
+  listingImage: { width: "100%", height: 203, borderRadius: 10 },
+  listingTitle: { fontSize: 16, fontWeight: "500", color: "#13281F", textAlign: "center", marginTop: 6 },
+  listingPrice: { fontSize: 16, fontWeight: "500", color: "#13281F", textAlign: "center" },
   navBar: {
     position: "absolute",
     bottom: 0,
