@@ -1,4 +1,5 @@
-import React from "react";
+// ItemScreen.js
+import React from 'react';
 import {
   View,
   Text,
@@ -6,8 +7,9 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 const ItemScreen = ({ route, navigation }) => {
   const { image, title, price, seller } = route.params;
 
@@ -16,9 +18,15 @@ const ItemScreen = ({ route, navigation }) => {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Image source={require("./icons/back.png")} style={styles.backIcon} />
+            <Image
+              source={require('./icons/back.png')}
+              style={styles.backIcon}
+            />
           </TouchableOpacity>
-          <Image source={require("./icons/nav-heart.png")} style={styles.heartIcon} />
+          <Image
+            source={require('./icons/nav-heart.png')}
+            style={styles.heartIcon}
+          />
         </View>
 
         <Image source={image} style={styles.mainImage} resizeMode="cover" />
@@ -35,12 +43,13 @@ const ItemScreen = ({ route, navigation }) => {
           <Text style={styles.offers}>10 people have sent offers</Text>
 
           <Text style={styles.description}>
-            Lorem ipsum odor amet, consectetuer adipiscing elit. <Text style={styles.readMore}>Read More</Text>
+            Lorem ipsum odor amet, consectetuer adipiscing elit.{' '}
+            <Text style={styles.readMore}>Read More</Text>
           </Text>
 
           <View style={styles.sellerBox}>
             <Image
-              source={require("./icons/profile.png")}
+              source={require('./icons/profile.png')}
               style={styles.profilePic}
             />
             <View>
@@ -51,7 +60,13 @@ const ItemScreen = ({ route, navigation }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.offerButton}>
+          {/* Pass title, price, and seller into Availability */}
+          <TouchableOpacity
+            style={styles.offerButton}
+            onPress={() =>
+              navigation.navigate('Availability', { title, price, seller })
+            }
+          >
             <Text style={styles.offerText}>Send Offer</Text>
           </TouchableOpacity>
         </View>
@@ -63,11 +78,11 @@ const ItemScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FAF7E8",
+    backgroundColor: '#FAF7E8',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     padding: 16,
   },
   backIcon: {
@@ -79,7 +94,7 @@ const styles = StyleSheet.create({
     height: 32,
   },
   mainImage: {
-    width: "100%",
+    width: '100%',
     height: 240,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -88,53 +103,53 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   titleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   itemTitle: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#13281F",
+    fontWeight: '600',
+    color: '#13281F',
   },
   availableTag: {
-    backgroundColor: "#B6E2C6",
+    backgroundColor: '#B6E2C6',
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 20,
   },
   availableText: {
-    color: "#13281F",
+    color: '#13281F',
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   price: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     marginTop: 6,
-    color: "#000",
+    color: '#000',
   },
   offers: {
     fontSize: 14,
-    color: "#333",
+    color: '#333',
     marginTop: 2,
   },
   description: {
     fontSize: 14,
     marginTop: 12,
-    color: "#333",
+    color: '#333',
   },
   readMore: {
-    color: "#007BFF",
-    fontWeight: "500",
+    color: '#007BFF',
+    fontWeight: '500',
   },
   sellerBox: {
-    flexDirection: "row",
-    backgroundColor: "#DCE5E2",
+    flexDirection: 'row',
+    backgroundColor: '#DCE5E2',
     borderRadius: 14,
     padding: 12,
     marginTop: 20,
-    alignItems: "center",
+    alignItems: 'center',
   },
   profilePic: {
     width: 40,
@@ -143,26 +158,26 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   sellerName: {
-    fontWeight: "600",
+    fontWeight: '600',
     fontSize: 14,
-    color: "#000",
+    color: '#000',
   },
   sellerDetails: {
     fontSize: 13,
-    color: "#444",
+    color: '#444',
     marginTop: 2,
   },
   offerButton: {
-    backgroundColor: "#1F4035",
+    backgroundColor: '#1F4035',
     paddingVertical: 14,
     borderRadius: 14,
     marginTop: 20,
-    alignItems: "center",
+    alignItems: 'center',
   },
   offerText: {
-    color: "white",
+    color: 'white',
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });
 

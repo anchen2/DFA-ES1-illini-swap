@@ -6,15 +6,15 @@ import { createStackNavigator } from '@react-navigation/stack';
 import './firebaseConfig';
 
 import EntryScreen from './EntryScreen';
-import SignUpScreen from './SignUpScreen';
 import SignInScreen from './SignInScreen';
+import SignUpScreen from './SignUpScreen';
 import HomeScreen from './HomeScreen';
 
 import ItemScreen from './ItemScreen';
-import SearchScreen from "./SearchScreen";
-
+import AvailabilityScreen from './AvailabilityScreen';
+import ReviewOfferScreen from './ReviewOfferScreen';
+import SearchScreen from './SearchScreen';
 import FavoritesScreen from './FavoritesScreen';
-
 
 const Stack = createStackNavigator();
 
@@ -28,6 +28,8 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
 
         <Stack.Screen name="Item" component={ItemScreen} />
+        <Stack.Screen name="Availability" component={AvailabilityScreen} />
+        <Stack.Screen name="ReviewOffer" component={ReviewOfferScreen} />
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="Favorites" component={FavoritesScreen} />
       </Stack.Navigator>
