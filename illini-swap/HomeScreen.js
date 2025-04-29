@@ -91,7 +91,7 @@ const HomeScreen = () => {
         <View style={styles.listingsContainer}>
 
           {listings.map((item, idx) => {
-            const firstImage = item.images?.[0] ?? item.source;a
+            const firstImage = item.images?.[0] ?? item.source;
             const imgSrc = typeof firstImage === "string"
               ? { uri: firstImage }
               : firstImage;
