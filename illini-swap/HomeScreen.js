@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,20 +8,60 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import { useFavorites } from "./FavoritesContext"; // <== Import context!
+
+
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
+
+const itemImages = [
+  { id: 1, source: require("./images/item1.png"), title: "Listing Name", price: "$10" },
+  { id: 2, source: require("./images/item2.png"), title: "Listing Name", price: "$10" },
+  { id: 3, source: require("./images/item3.png"), title: "Listing Name", price: "$10" },
+  { id: 4, source: require("./images/item4.png"), title: "Listing Name", price: "$10" },
+]; 
+
 
 const itemData = [
   { id: 1, image: require("./images/item1.png"), title: "Item 1" },
   { id: 2, image: require("./images/item2.png"), title: "Item 2" },
   { id: 3, image: require("./images/item3.png"), title: "Item 3" },
   { id: 4, image: require("./images/item4.png"), title: "Item 4" },
+
 ];
 
 const HomeScreen = () => {
   const navigation = useNavigation();
+
+  const route = useRoute();
+
   const { favorites, toggleFavorite } = useFavorites(); // <== Use context!
 
+
+  // now this useState comes from React
+  const [listings, setListings] = useState(itemImages);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.newListing) {
+      //   setListings((prev) => [
+      //     ...prev,
+      //     {
+      //       images: route.params.newListing.images,
+      //       title: route.params.newListing.title,
+      //       price: route.params.newListing.price,
+      //     },
+      //   ]);
+      //   navigation.setParams({ newListing: undefined });
+      // }
+      const newItem = {
+        id: Date.now().toString(),
+        ...route.params.newListing,
+      };
+      setListings(prev => [...prev, newItem]);
+      navigation.setParams({ newListing: undefined });
+    }
+    }, [route.params?.newListing])
+  );
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -68,13 +108,70 @@ const HomeScreen = () => {
 
         {/* Listings Grid */}
         <View style={styles.listingsContainer}>
-          {itemData.map((item) => (
-            <TouchableOpacity
+        {listings.map(item => {
+            const firstImage = item.images?.[0] ?? item.source;
+            const imgSrc = typeof firstImage === 'string'
+              ? { uri: firstImage }
+              : firstImage;
+            const sellerInfo = item.seller ?? { name: 'Lucas Ness', rating: 4, sold: 15, active: 'Active Today' };
+
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={[styles.listingBox, { marginRight: 16, marginBottom: 16 }]}
+                onPress={() => navigation.navigate('Item', {
+                  image: imgSrc,
+                  title: item.title,
+                  price: item.price,
+                  description: item.description,
+                  seller: sellerInfo,
+                })}
+              >
+                <Image source={imgSrc} style={styles.listingImage} resizeMode="cover" />
+                <Text style={styles.listingTitle}>{item.title}</Text>
+                <View style={styles.priceRow}>
+                  <Text style={styles.listingPrice}>{item.price}</Text>
+                  <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
+                    <Image
+                      source={
+                        favorites[item.id]
+                          ? require("./icons/filled_heart.png")
+                          : require("./icons/hollow-heart.png")
+                      }
+                      style={{ width: 21, height: 21, resizeMode: "contain" }}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+          {/* {listings.map((item, idx) => {
+            const firstImage = item.images?.[0] ?? item.source;
+            const imgSrc = typeof firstImage === "string"
+              ? { uri: firstImage }
+              : firstImage;
+            return (
+              <TouchableOpacity key={idx} style={[styles.listingBox, { marginRight: 16, marginBottom: 16 }]}>
+                <Image
+                  source={imgSrc}
+                  style={styles.listingImage}
+                  resizeMode="cover"
+                />
+                <Text style={styles.listingTitle}>{item.title}</Text>
+                <Text style={styles.listingPrice}>{item.price}</Text>
+              </TouchableOpacity>
+            );
+            })} */}
+          {/* {itemImages.map((item) => 
+            {
+              const firstImage = item.images?.[0] ?? item.source;
+              return (
+                <TouchableOpacity
               key={item.id}
               style={[styles.listingBox, { marginRight: 16, marginBottom: 16 }]}
               onPress={() =>
                 navigation.navigate("Item", {
-                  image: item.image,
+                  image: firstImage,
                   title: item.title,
                   price: "$20.00",
                   seller: {
@@ -86,7 +183,7 @@ const HomeScreen = () => {
                 })
               }
             >
-              <Image source={item.image} style={styles.listingImage} resizeMode="cover" />
+              <Image source={firstImage} style={styles.listingImage} resizeMode="cover" />
               <Text style={styles.listingTitle}>{item.title}</Text>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
                 <Text style={styles.listingPrice}>$10</Text>
@@ -102,17 +199,22 @@ const HomeScreen = () => {
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
-          ))}
+              );
+              })} */}
+
         </View>
       </ScrollView>
 
       {/* Bottom Nav Bar */}
       <View style={styles.navBar}>
-        <Image source={require("./icons/nav-tag.png")} style={styles.icon} />
+        <TouchableOpacity onPress={() => navigation.navigate("SellItem")}>
+            <Image source={require("./icons/tag-icon.png")} style={[styles.navIcon, { tintColor: "#FAF7E8" }]} />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate("Favorites")}>
           <Image source={require("./icons/nav-heart.png")} style={styles.icon} />
         </TouchableOpacity>
-        <Image source={require("./icons/nav-home.png")} style={styles.icon} />
+
+        <Image source={require("./icons/home-icon.png")} style={[styles.navIcon, { tintColor: "#FCA26E" }]} />
         <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
         <Image source={require("./icons/nav-user-square.png")} style={styles.icon} />
       </View>
@@ -148,7 +250,15 @@ const styles = StyleSheet.create({
   listingBox: { width: 164, padding: 19 },
   listingImage: { width: "100%", height: 203, borderRadius: 10 },
   listingTitle: { fontSize: 16, fontWeight: "500", color: "#13281F", textAlign: "center", marginTop: 6 },
-  listingPrice: { fontSize: 16, fontWeight: "500", color: "#13281F", textAlign: "center" },
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    marginTop: 2,
+  },
+  listingPrice: { fontSize: 16, fontWeight: "500", color: "#13281F" },
+  heartIcon: { width: 21, height: 21, resizeMode: "contain" },
   navBar: {
     position: "absolute",
     bottom: 0,
@@ -165,6 +275,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 8,
   },
+  navIcon: { width: 33, height: 33 },
 });
 
 export default HomeScreen;

@@ -15,6 +15,10 @@ import AvailabilityScreen from './AvailabilityScreen';
 import ReviewOfferScreen from './ReviewOfferScreen';
 import SearchScreen from './SearchScreen';
 import FavoritesScreen from './FavoritesScreen';
+
+import SellItem from './SellItem'
+
+
 import { FavoritesProvider } from "./FavoritesContext";
 
 const Stack = createStackNavigator();
@@ -34,6 +38,7 @@ export default function App() {
         <Stack.Screen name="ReviewOffer" component={ReviewOfferScreen} />
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="Favorites" component={FavoritesScreen} />
+        <Stack.Screen name="SellItem" component={SellItem} />
       </Stack.Navigator>
     </NavigationContainer>
     </FavoritesProvider>
