@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './firebaseConfig';
-import { useGoogleAuth } from './GoogleSignIn';
+// import { useGoogleAuth } from './GoogleSignIn';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 
@@ -19,8 +19,9 @@ export default function SignInScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const navigation = useNavigation();
 
-  const { promptAsync } = useGoogleAuth(navigation);
+  // const { promptAsync } = useGoogleAuth(navigation);
 
+ /*
   const handleLogin = async () => {
     try {
       setErrorMessage('');
@@ -30,7 +31,13 @@ export default function SignInScreen() {
       setErrorMessage('Incorrect email or password.');
       console.error('Login Error:', error.message);
     }
+
   };
+*/
+
+const handleLogin = () => {
+  navigation.navigate('Home');
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -77,11 +84,13 @@ export default function SignInScreen() {
 
       <Text style={styles.ssoLabel}>Log In with SSO</Text>
 
-      <View style={styles.ssoContainer}>
+      {/*
+       <View style={styles.ssoContainer}>
         <TouchableOpacity style={styles.ssoIcon} onPress={promptAsync}>
           <Text style={styles.ssoText}>G</Text>
         </TouchableOpacity>
-      </View>
+      </View> 
+      */}
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.signUpButton} onPress={() => navigation.navigate('Sign Up')}>
