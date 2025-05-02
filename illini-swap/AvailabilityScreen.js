@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   dateLabel: { fontFamily: 'Montserrat', fontSize: 12, color: '#13281F' },
   dateNum: { fontFamily: 'Montserrat', fontSize: 16, fontWeight: '600', color: '#13281F', marginTop: 2 },
   meetingInfo: { textAlign: 'center', fontSize: 12, color: '#444', marginVertical: 8 },
-  timesList: { flex: 1, paddingHorizontal: 16 },
+  timesList: { paddingHorizontal: 16, marginTop: 6 },
   timeRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   timeLabel: { fontFamily: 'Montserrat', width: 70, fontSize: 14, color: '#13281F' },
   slotBox: { flex: 1, height: 30, borderWidth: 1, borderColor: '#CCC', borderRadius: 10 },
