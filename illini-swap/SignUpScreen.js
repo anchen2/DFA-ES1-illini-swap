@@ -20,14 +20,12 @@ export default function SignUpScreen({ navigation }) {
   const [error, setError] = useState('');
 
   const handleSignUp = () => {
-    setError(''); // Clear existing error
+    setError('');
 
     if (!email.endsWith('@illinois.edu')) {
       setError('Please use your @illinois.edu email address.');
       return;
     }
-
-    navigation.navigate('Sign In'); // Navigate immediately
 
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
@@ -35,8 +33,12 @@ export default function SignUpScreen({ navigation }) {
         return setDoc(doc(db, 'users', user.uid), {
           fullName,
           email,
+          firstLogin: true, // 🔑 Important flag to trigger preferences screen
           createdAt: new Date(),
         });
+      })
+      .then(() => {
+        navigation.replace('Sign In'); // ✅ Only navigate after Firestore write
       })
       .catch((err) => {
         if (err.code === 'auth/email-already-in-use') {

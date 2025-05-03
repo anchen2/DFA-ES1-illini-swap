@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc, enableNetwork } from 'firebase/firestore';
+import { auth, db } from './firebaseConfig'; // Make sure db is exported in firebaseConfig
 import {
   Text,
   View,
@@ -7,9 +10,6 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from './firebaseConfig';
-// import { useGoogleAuth } from './GoogleSignIn';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 
@@ -19,25 +19,36 @@ export default function SignInScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const navigation = useNavigation();
 
-  // const { promptAsync } = useGoogleAuth(navigation);
-
- /*
   const handleLogin = async () => {
     try {
       setErrorMessage('');
-      await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate('Home');
+
+      // Sign in the user
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Ensure Firestore network is enabled if it was offline
+      await enableNetwork(db);
+
+      // Fetch user data from Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        if (data.firstLogin === true) {
+          navigation.replace('Preferences'); // Show Preferences screen if it's the first login
+        } else {
+          navigation.replace('Home'); // Go straight to Home for subsequent logins
+        }
+      } else {
+        setErrorMessage('User data not found.');
+      }
     } catch (error) {
-      setErrorMessage('Incorrect email or password.');
       console.error('Login Error:', error.message);
+      setErrorMessage('Incorrect email or password.');
     }
-
   };
-*/
-
-const handleLogin = () => {
-  navigation.navigate('Home');
-};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -84,14 +95,6 @@ const handleLogin = () => {
 
       <Text style={styles.ssoLabel}>Log In with SSO</Text>
 
-      {/*
-       <View style={styles.ssoContainer}>
-        <TouchableOpacity style={styles.ssoIcon} onPress={promptAsync}>
-          <Text style={styles.ssoText}>G</Text>
-        </TouchableOpacity>
-      </View> 
-      */}
-
       <View style={styles.footer}>
         <TouchableOpacity style={styles.signUpButton} onPress={() => navigation.navigate('Sign Up')}>
           <Text style={styles.signUpText}>Sign up</Text>
@@ -106,7 +109,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAF7E8',
     justifyContent: 'center',
-    paddingHorizontal: 5, // 38px total margin in (19px each side)
+    paddingHorizontal: 5,
   },
   header: {
     alignItems: 'center',
@@ -169,21 +172,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1F4035',
     marginVertical: 10,
-  },
-  ssoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  ssoIcon: {
-    marginHorizontal: 10,
-    backgroundColor: '#eee',
-    padding: 12,
-    borderRadius: 50,
-  },
-  ssoText: {
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   footer: {
     alignItems: 'center',

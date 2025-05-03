@@ -8,7 +8,7 @@ import EntryScreen from './EntryScreen';
 import SignInScreen from './SignInScreen';
 import SignUpScreen from './SignUpScreen';
 import HomeScreen from './HomeScreen';
-
+import PreferenceScreen from './PreferenceScreen';
 import ItemScreen from './ItemScreen';
 import AvailabilityScreen from './AvailabilityScreen';
 import ReviewOfferScreen from './ReviewOfferScreen';
@@ -38,6 +38,7 @@ export default function App() {
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="Favorites" component={FavoritesScreen} />
         <Stack.Screen name="SellItem" component={SellItem} />
+        <Stack.Screen name="Preferences" component={PreferenceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     </FavoritesProvider>
