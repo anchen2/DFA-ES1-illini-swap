@@ -93,12 +93,16 @@ const FavoritesScreen = ({ navigation }) => {
 
       {/* Bottom Nav Bar */}
       <View style={styles.navBar}>
-        <Image source={require("./icons/nav-tag.png")} style={styles.icon} />
+      <TouchableOpacity onPress={() => navigation.navigate("SellItem")}>
+          <Image source={require("./icons/nav-tag.png")} style={styles.icon} />
+        </TouchableOpacity>
         <Image source={require("./icons/nav-heart.png")} style={[styles.navIcon, { tintColor: "#FCA26E" }]} />
         <TouchableOpacity onPress={() => navigation.navigate("Home")}>
           <Image source={require("./icons/home-icon.png")} style={[styles.navIcon, { tintColor: "#FAF7E8" }]} />
         </TouchableOpacity>
-        <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
+        <TouchableOpacity onPress={() => navigation.navigate("Pending")}>
+          <Image source={require("./icons/pending.png")} style={[styles.navIcon, { tintColor: "#FAF7E8" }]} />
+        </TouchableOpacity>
         <Image source={require("./icons/nav-user-square.png")} style={styles.icon} />
       </View>
     </SafeAreaView>

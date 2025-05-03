@@ -215,7 +215,9 @@ const HomeScreen = () => {
         </TouchableOpacity>
 
         <Image source={require("./icons/home-icon.png")} style={[styles.navIcon, { tintColor: "#FCA26E" }]} />
-        <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
+        <TouchableOpacity onPress={() => navigation.navigate("Pending")}>
+          <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
+        </TouchableOpacity>
         <Image source={require("./icons/nav-user-square.png")} style={styles.icon} />
       </View>
     </SafeAreaView>

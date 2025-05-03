@@ -64,7 +64,7 @@ const ItemScreen = ({ route, navigation }) => {
           <TouchableOpacity
             style={styles.offerButton}
             onPress={() =>
-              navigation.navigate('Availability', { title, price, seller })
+              navigation.navigate('Availability', { title, price, seller, image })
             }
           >
             <Text style={styles.offerText}>Send Offer</Text>

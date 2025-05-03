@@ -1,5 +1,5 @@
 // ReviewOfferScreen.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-
+import { OffersContext } from './OffersContext';
 /* ── common UIUC meetup locations ───────────────────────────── */
 const MEETING_SPOTS = [
   'Illini Union',
@@ -26,8 +26,8 @@ const MEETING_SPOTS = [
 
 export default function ReviewOfferScreen() {
   const navigation = useNavigation();
-  const { title, price, seller } = useRoute().params;   // ⬅ availability removed
-
+  const { title, price, seller, availability, image } = useRoute().params; 
+  const { addOffer } = useContext(OffersContext);
   /* state */
   const [meetingPlace, setMeetingPlace] = useState('Illini Union');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -92,9 +92,18 @@ export default function ReviewOfferScreen() {
       {/* save / send offer */}
       <TouchableOpacity
         style={styles.sendOfferBtn}
-        onPress={() =>
-          navigation.navigate('Home', { meetingPlace /* include if needed */ })
-        }
+        onPress={() => {
+          addOffer({
+            title,
+            price,
+            seller,
+            image,
+            availability,
+            meetingPlace,
+            direction: 'sent',
+          });
+          navigation.navigate('Pending');
+        }}
       >
         <Text style={styles.sendOfferText}>Save</Text>
       </TouchableOpacity>
