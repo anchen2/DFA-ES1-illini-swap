@@ -14,16 +14,18 @@ import AvailabilityScreen from './AvailabilityScreen';
 import ReviewOfferScreen from './ReviewOfferScreen';
 import SearchScreen from './SearchScreen';
 import FavoritesScreen from './FavoritesScreen';
-
 import SellItem from './SellItem'
+import PendingOrders from './PendingOrders'
+import { OffersProvider } from './OffersContext';
 
-
+import OfferDetailScreen from './OfferDetailScreen';
 import { FavoritesProvider } from "./FavoritesContext";
 
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
+    <OffersProvider>
     <FavoritesProvider>
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Entry" screenOptions={{ headerShown: false }}>
@@ -39,8 +41,11 @@ export default function App() {
         <Stack.Screen name="Favorites" component={FavoritesScreen} />
         <Stack.Screen name="SellItem" component={SellItem} />
         <Stack.Screen name="Preferences" component={PreferenceScreen} />
+        <Stack.Screen name="Pending" component={PendingOrders} />
+        <Stack.Screen name="OfferDetail" component={OfferDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     </FavoritesProvider>
+    </OffersProvider>
   );
 }
