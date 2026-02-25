@@ -28,7 +28,7 @@ export default function App() {
     <OffersProvider>
     <FavoritesProvider>
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Entry" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Entry" component={EntryScreen} />
         <Stack.Screen name="Sign In" component={SignInScreen} />
         <Stack.Screen name="Sign Up" component={SignUpScreen} />
