@@ -121,3 +121,18 @@ illini-swap/
 ---
 
 Happy hacking! If you have questions, check the screen files for inline documentation, or reach out to project maintainers.
+
+---
+
+## Realtime + Notifications Deliverable Docs
+
+New documentation for the realtime messaging and notifications deliverable:
+
+- `illini-swap/docs/realtime-notifications-spec.md`
+- `illini-swap/docs/realtime-lab-guide.md`
+
+Quick test path:
+
+1. Open `Sign Up`.
+2. Tap `Dev: Open Realtime Lab`.
+3. Follow the lab guide to test message delivery, read receipts, presence, preferences, and notification suppression behavior.
