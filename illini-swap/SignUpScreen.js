@@ -90,6 +90,18 @@ export default function SignUpScreen({ navigation }) {
         <TouchableOpacity style={styles.button} onPress={handleSignUp}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.devButton}
+          onPress={() => navigation.navigate('Home')}
+        >
+          <Text style={styles.devButtonText}>Dev: Skip to Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.devButton}
+          onPress={() => navigation.navigate('RealtimeLab')}
+        >
+          <Text style={styles.devButtonText}>Dev: Open Realtime Lab</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -163,5 +175,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'Montserrat',
     textAlign: 'center',
+  },
+  devButton: {
+    marginTop: 12,
+    borderRadius: 30,
+    height: 44,
+    width: '80%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FAF7E8',
+    backgroundColor: 'transparent',
+  },
+  devButtonText: {
+    color: '#FAF7E8',
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: 'Montserrat',
   },
 });

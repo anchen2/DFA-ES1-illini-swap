@@ -16,6 +16,7 @@ import SearchScreen from './SearchScreen';
 import FavoritesScreen from './FavoritesScreen';
 import SellItem from './SellItem'
 import PendingOrders from './PendingOrders'
+import RealtimeLabScreen from './RealtimeLabScreen';
 import { OffersProvider } from './OffersContext';
 
 import OfferDetailScreen from './OfferDetailScreen';
@@ -43,6 +44,7 @@ export default function App() {
         <Stack.Screen name="Preferences" component={PreferenceScreen} />
         <Stack.Screen name="Pending" component={PendingOrders} />
         <Stack.Screen name="OfferDetail" component={OfferDetailScreen} />
+        <Stack.Screen name="RealtimeLab" component={RealtimeLabScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     </FavoritesProvider>
