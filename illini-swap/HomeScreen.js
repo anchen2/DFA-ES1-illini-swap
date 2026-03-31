@@ -104,6 +104,15 @@ const HomeScreen = () => {
           <TouchableOpacity onPress={() => navigation.navigate("RealtimeLab")}>
             <Image source={require("./icons/comment-lines.png")} style={styles.icon} />
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Profile")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Image
+              source={require("./icons/nav-user-square.png")}
+              style={[styles.icon, { marginLeft: 16 }]}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Environmental Fact Box */}
@@ -252,7 +261,6 @@ const HomeScreen = () => {
         <TouchableOpacity onPress={() => navigation.navigate("Pending")}>
           <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
         </TouchableOpacity>
-        <Image source={require("./icons/nav-user-square.png")} style={styles.icon} />
       </View>
     </SafeAreaView>
   );
