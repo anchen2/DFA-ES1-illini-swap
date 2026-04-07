@@ -87,6 +87,7 @@ const [pendingListing, setPendingListing] = useState(null);
         title,
         price: listingPrice,
         description,
+        category,
       });
       setSuccessModalVisible(true);
   };
