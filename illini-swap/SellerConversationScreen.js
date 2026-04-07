@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,55 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRoute } from '@react-navigation/native';
 import OfferCard from './OfferCard';
 import ApprovalModal from './ApprovalModal';
+import {
+  listConversationMessages,
+  markMessageRead,
+  onEvent,
+  sendMessage,
+} from './services/realtime/RealtimeService';
 
 const SellerConversationScreen = ({ navigation }) => {
+  const route = useRoute();
+  const conversationId = route.params?.conversationId || 'seller-thread-1';
+  const currentUserId = route.params?.currentUserId || 'dev-user-b';
+  const peerUserId = route.params?.peerUserId || 'dev-user-a';
+  const threadTitle = route.params?.title || route.params?.user?.name || 'Conversation';
   const [expanded, setExpanded] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [offerStatus, setOfferStatus] = useState('Pending');
+  const [draft, setDraft] = useState('');
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    const syncMessages = () => {
+      setMessages(listConversationMessages(conversationId));
+    };
+
+    syncMessages();
+
+    const unsubscribe = onEvent((event) => {
+      if (event.payload?.conversationId === conversationId) {
+        syncMessages();
+      }
+    });
+
+    return unsubscribe;
+  }, [conversationId]);
+
+  useEffect(() => {
+    const unreadMessage = [...messages]
+      .reverse()
+      .find((message) => message.senderId !== currentUserId && !message.readBy.includes(currentUserId));
+
+    if (unreadMessage) {
+      markMessageRead({ messageId: unreadMessage.id, userId: currentUserId });
+    }
+  }, [messages, currentUserId]);
+
+  const sortedMessages = useMemo(() => messages, [messages]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -23,7 +65,7 @@ const SellerConversationScreen = ({ navigation }) => {
           <Text style={styles.icon}>←</Text>
         </TouchableOpacity>
 
-        <Text style={styles.userName}>Johnny B</Text>
+        <Text style={styles.userName}>{threadTitle}</Text>
 
         <TouchableOpacity>
           <Text style={styles.icon}>⋮</Text>
@@ -44,11 +86,17 @@ const SellerConversationScreen = ({ navigation }) => {
           onApprove={() => setModalVisible(true)}
         />
 
-        <View style={styles.messageBubbleLeft}>
-          <Text style={styles.messageText}>
-            Hey! Just wanted to confirm the location and time before you approve.
-          </Text>
-        </View>
+        {sortedMessages.map((message) => {
+          const isMine = message.senderId === currentUserId;
+          return (
+            <View
+              key={message.id}
+              style={isMine ? styles.messageBubbleRight : styles.messageBubbleLeft}
+            >
+              <Text style={styles.messageText}>{message.body}</Text>
+            </View>
+          );
+        })}
       </ScrollView>
 
       <View style={styles.inputBar}>
@@ -56,8 +104,26 @@ const SellerConversationScreen = ({ navigation }) => {
           placeholder="Send Message"
           placeholderTextColor="#6B7280"
           style={styles.input}
+          value={draft}
+          onChangeText={setDraft}
         />
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            const trimmed = draft.trim();
+            if (!trimmed) {
+              return;
+            }
+
+            sendMessage({
+              conversationId,
+              senderId: currentUserId,
+              recipientId: peerUserId,
+              body: trimmed,
+            });
+            setDraft('');
+            setMessages(listConversationMessages(conversationId));
+          }}
+        >
           <Text style={styles.sendIcon}>✈</Text>
         </TouchableOpacity>
       </View>
@@ -114,6 +180,17 @@ const styles = StyleSheet.create({
   messageText: {
     color: '#173528',
     fontSize: 13,
+  },
+  messageBubbleRight: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D7DDD6',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    maxWidth: '78%',
+    marginBottom: 12,
   },
   inputBar: {
     margin: 16,

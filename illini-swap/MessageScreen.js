@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { listConversationMessages, onEvent } from './services/realtime/RealtimeService';
 
 const sentOffers = [
   {
@@ -15,21 +16,30 @@ const sentOffers = [
     name: 'Lucas N.',
     time: 'sent 1 hr ago',
     status: 'Approved',
-    //avatar: 'https://i.pravatar.cc/100?img=1',
+    avatar: null,
+    conversationId: 'buyer-thread-1',
+    currentUserId: 'dev-user-a',
+    peerUserId: 'dev-user-b',
   },
   {
     id: 2,
     name: 'Arianna G.',
     time: 'sent 1 hr ago',
     status: 'Pending',
-    //avatar: 'https://i.pravatar.cc/100?img=2',
+    avatar: null,
+    conversationId: 'buyer-thread-2',
+    currentUserId: 'dev-user-a',
+    peerUserId: 'dev-user-b',
   },
   {
     id: 3,
     name: 'Cynthia E.',
     time: 'sent 1 hr ago',
     status: 'Declined',
-    //avatar: 'https://i.pravatar.cc/100?img=3',
+    avatar: null,
+    conversationId: 'buyer-thread-3',
+    currentUserId: 'dev-user-a',
+    peerUserId: 'dev-user-b',
   },
 ];
 
@@ -39,17 +49,26 @@ const receivedOffers = [
     name: 'Johnny B.',
     time: 'received 1 hr ago',
     status: 'Pending',
+    avatar: null,
+    conversationId: 'seller-thread-1',
+    currentUserId: 'dev-user-b',
+    peerUserId: 'dev-user-a',
   },
   {
     id: 2,
     name: 'Monty M.',
     time: 'received 1 hr ago',
     status: 'Pending',
+    avatar: null,
+    conversationId: 'seller-thread-2',
+    currentUserId: 'dev-user-b',
+    peerUserId: 'dev-user-a',
   },
 ];
 
 const MessageScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('sent');
+  const [refreshTick, setRefreshTick] = useState(0);
   const data = activeTab === 'sent' ? sentOffers : receivedOffers;
 
   const getStatusStyle = (status) => {
@@ -58,11 +77,31 @@ const MessageScreen = ({ navigation }) => {
     return styles.pending;
   };
 
+  useEffect(() => {
+    const unsubscribe = onEvent(() => {
+      setRefreshTick((value) => value + 1);
+    });
+
+    return unsubscribe;
+  }, []);
+
   const handlePress = (item) => {
     if (activeTab === 'sent') {
-      navigation.navigate('BuyerConversation', { user: item });
+      navigation.navigate('BuyerConversation', {
+        user: item,
+        conversationId: item.conversationId,
+        currentUserId: item.currentUserId,
+        peerUserId: item.peerUserId,
+        title: item.name,
+      });
     } else {
-      navigation.navigate('SellerConversation', { user: item });
+      navigation.navigate('SellerConversation', {
+        user: item,
+        conversationId: item.conversationId,
+        currentUserId: item.currentUserId,
+        peerUserId: item.peerUserId,
+        title: item.name,
+      });
     }
   };
 
@@ -109,7 +148,7 @@ const MessageScreen = ({ navigation }) => {
       <ScrollView>
         {data.map((item) => (
           <TouchableOpacity
-            key={item.id}
+            key={item.conversationId}
             style={styles.messageRow}
             onPress={() => handlePress(item)}
           >
@@ -122,6 +161,9 @@ const MessageScreen = ({ navigation }) => {
             <View style={styles.messageInfo}>
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.time}>{item.time}</Text>
+              <Text style={styles.previewText}>
+                {listConversationMessages(item.conversationId).slice(-1)[0]?.body || 'Tap to start the thread'}
+              </Text>
             </View>
 
             <View style={[styles.statusPill, getStatusStyle(item.status)]}>
@@ -214,6 +256,11 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 13,
     color: '#6C7A74',
+  },
+  previewText: {
+    fontSize: 12,
+    color: '#8A958F',
+    marginTop: 4,
   },
   statusPill: {
     paddingHorizontal: 12,

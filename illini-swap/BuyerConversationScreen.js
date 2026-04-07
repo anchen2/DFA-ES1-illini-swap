@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,53 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRoute } from '@react-navigation/native';
 import OfferCard from './OfferCard';
+import {
+  listConversationMessages,
+  markMessageRead,
+  onEvent,
+  sendMessage,
+} from './services/realtime/RealtimeService';
 
 const BuyerConversationScreen = ({ navigation }) => {
+  const route = useRoute();
+  const conversationId = route.params?.conversationId || 'buyer-thread-1';
+  const currentUserId = route.params?.currentUserId || 'dev-user-a';
+  const peerUserId = route.params?.peerUserId || 'dev-user-b';
+  const threadTitle = route.params?.title || route.params?.user?.name || 'Conversation';
   const [expanded, setExpanded] = useState(true);
   const [nudged, setNudged] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    const syncMessages = () => {
+      setMessages(listConversationMessages(conversationId));
+    };
+
+    syncMessages();
+
+    const unsubscribe = onEvent((event) => {
+      if (event.payload?.conversationId === conversationId) {
+        syncMessages();
+      }
+    });
+
+    return unsubscribe;
+  }, [conversationId]);
+
+  useEffect(() => {
+    const unreadMessage = [...messages]
+      .reverse()
+      .find((message) => message.senderId !== currentUserId && !message.readBy.includes(currentUserId));
+
+    if (unreadMessage) {
+      markMessageRead({ messageId: unreadMessage.id, userId: currentUserId });
+    }
+  }, [messages, currentUserId]);
+
+  const sortedMessages = useMemo(() => messages, [messages]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -21,7 +63,7 @@ const BuyerConversationScreen = ({ navigation }) => {
           <Text style={styles.icon}>←</Text>
         </TouchableOpacity>
 
-        <Text style={styles.userName}>Arianna G</Text>
+        <Text style={styles.userName}>{threadTitle}</Text>
 
         <TouchableOpacity>
           <Text style={styles.icon}>⋮</Text>
@@ -37,14 +79,20 @@ const BuyerConversationScreen = ({ navigation }) => {
           price="20"
           location="Illini Union"
           availability="Dec 1 - Dec 7, 2025"
-          status="Pending"
+          status={route.params?.user?.status || 'Pending'}
         />
 
-        <View style={styles.messageBubbleRight}>
-          <Text style={styles.messageText}>
-            Great, I’ll finalize everything. Thank you so much!
-          </Text>
-        </View>
+        {sortedMessages.map((message) => {
+          const isMine = message.senderId === currentUserId;
+          return (
+            <View
+              key={message.id}
+              style={isMine ? styles.messageBubbleRight : styles.messageBubbleLeft}
+            >
+              <Text style={styles.messageText}>{message.body}</Text>
+            </View>
+          );
+        })}
 
         <TouchableOpacity
           style={styles.nudgeButton}
@@ -68,8 +116,26 @@ const BuyerConversationScreen = ({ navigation }) => {
           placeholder="Send Message"
           placeholderTextColor="#6B7280"
           style={styles.input}
+          value={draft}
+          onChangeText={setDraft}
         />
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            const trimmed = draft.trim();
+            if (!trimmed) {
+              return;
+            }
+
+            sendMessage({
+              conversationId,
+              senderId: currentUserId,
+              recipientId: peerUserId,
+              body: trimmed,
+            });
+            setDraft('');
+            setMessages(listConversationMessages(conversationId));
+          }}
+        >
           <Text style={styles.sendIcon}>✈</Text>
         </TouchableOpacity>
       </View>
@@ -116,6 +182,17 @@ const styles = StyleSheet.create({
   messageText: {
     color: '#173528',
     fontSize: 13,
+  },
+  messageBubbleLeft: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D7DDD6',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    maxWidth: '78%',
+    marginBottom: 14,
   },
   nudgeButton: {
     alignSelf: 'center',
