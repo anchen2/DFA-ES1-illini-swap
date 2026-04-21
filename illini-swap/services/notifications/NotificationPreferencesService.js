@@ -1,6 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const PREFS_KEY_PREFIX = 'notif-prefs:';
+import {
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+} from 'firebase/firestore';
+import { auth, db } from '../../firebaseConfig';
 
 export const DEFAULT_NOTIFICATION_PREFERENCES = {
   messages: true,
@@ -13,8 +17,8 @@ export const DEFAULT_NOTIFICATION_PREFERENCES = {
   },
 };
 
-function keyForUser(userId) {
-  return `${PREFS_KEY_PREFIX}${userId}`;
+function preferencesRef(userId) {
+  return doc(db, 'notificationPreferences', userId);
 }
 
 function normalizePreferences(input) {
@@ -36,17 +40,16 @@ export async function getNotificationPreferences(userId) {
     throw new Error('userId is required.');
   }
 
-  const raw = await AsyncStorage.getItem(keyForUser(userId));
-  if (!raw) {
+  if (!auth.currentUser?.uid) {
+    throw new Error('No authenticated Firebase session. Please sign in first.');
+  }
+
+  const snapshot = await getDoc(preferencesRef(userId));
+  if (!snapshot.exists()) {
     return { ...DEFAULT_NOTIFICATION_PREFERENCES };
   }
 
-  try {
-    const parsed = JSON.parse(raw);
-    return normalizePreferences(parsed);
-  } catch (error) {
-    return { ...DEFAULT_NOTIFICATION_PREFERENCES };
-  }
+  return normalizePreferences(snapshot.data());
 }
 
 export async function saveNotificationPreferences(userId, prefs) {
@@ -54,8 +57,22 @@ export async function saveNotificationPreferences(userId, prefs) {
     throw new Error('userId is required.');
   }
 
+  const authUserId = auth.currentUser?.uid;
+  if (!authUserId) {
+    throw new Error('No authenticated Firebase session. Please sign in first.');
+  }
+  if (authUserId !== userId) {
+    throw new Error('Current auth user does not match requested userId.');
+  }
+
   const normalized = normalizePreferences(prefs);
-  await AsyncStorage.setItem(keyForUser(userId), JSON.stringify(normalized));
+  await setDoc(
+    preferencesRef(userId),
+    {
+      ...normalized,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
   return normalized;
 }
-

@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isConversationParticipant(conversationId) {
+      return signedIn()
+        && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // NOTE: Read access is currently open to authenticated users so the in-app
+    // notification simulation can evaluate recipient preferences/tokens client-side.
+    // Tighten this when you move notification routing server-side.
+    match /notificationPreferences/{userId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isOwner(userId);
+    }
+
+    match /deviceTokens/{userId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isOwner(userId);
+
+      match /tokens/{tokenId} {
+        allow read: if signedIn();
+        allow create, update, delete: if isOwner(userId);
+      }
+    }
+
+    match /presence/{userId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isOwner(userId);
+    }
+
+    match /conversations/{conversationId} {
+      allow create: if signedIn()
+        && request.resource.data.participantIds is list
+        && request.resource.data.participantIds.size() == 2
+        && request.auth.uid in request.resource.data.participantIds;
+
+      allow read, update, delete: if signedIn()
+        && request.auth.uid in resource.data.participantIds;
+
+      match /messages/{messageId} {
+        allow read: if isConversationParticipant(conversationId);
+
+        allow create: if isConversationParticipant(conversationId)
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.body is string
+          && request.resource.data.body.size() > 0;
+
+        allow update: if isConversationParticipant(conversationId);
+        allow delete: if false;
+      }
+    }
+  }
+}

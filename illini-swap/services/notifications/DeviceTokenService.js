@@ -1,16 +1,38 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  serverTimestamp,
+  setDoc,
+} from 'firebase/firestore';
+import { auth, db } from '../../firebaseConfig';
 
-const TOKENS_KEY_PREFIX = 'notif-tokens:';
-
-function keyForUser(userId) {
-  return `${TOKENS_KEY_PREFIX}${userId}`;
+function tokensCollectionRef(userId) {
+  return collection(db, 'deviceTokens', userId, 'tokens');
 }
 
-function normalizeToken(token, platform) {
+function toIso(value) {
+  if (!value) {
+    return new Date().toISOString();
+  }
+  if (typeof value.toDate === 'function') {
+    return value.toDate().toISOString();
+  }
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return new Date().toISOString();
+}
+
+function normalizeTokenRecord(token, platform, updatedAt = null) {
   return {
     token: String(token),
     platform: platform || 'unknown',
-    updatedAt: new Date().toISOString(),
+    updatedAt: toIso(updatedAt),
   };
 }
 
@@ -19,20 +41,17 @@ export async function listDeviceTokens(userId) {
     throw new Error('userId is required.');
   }
 
-  const raw = await AsyncStorage.getItem(keyForUser(userId));
-  if (!raw) {
-    return [];
+  if (!auth.currentUser?.uid) {
+    throw new Error('No authenticated Firebase session. Please sign in first.');
   }
 
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed;
-  } catch (error) {
-    return [];
-  }
+  const snapshot = await getDocs(tokensCollectionRef(userId));
+  return snapshot.docs
+    .map((item) => {
+      const data = item.data() || {};
+      return normalizeTokenRecord(data.token || item.id, data.platform, data.updatedAt);
+    })
+    .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime());
 }
 
 export async function registerDeviceToken(userId, token, platform) {
@@ -40,11 +59,26 @@ export async function registerDeviceToken(userId, token, platform) {
     throw new Error('userId and token are required.');
   }
 
-  const existing = await listDeviceTokens(userId);
-  const deduped = existing.filter((entry) => entry.token !== token);
-  const next = [normalizeToken(token, platform), ...deduped];
-  await AsyncStorage.setItem(keyForUser(userId), JSON.stringify(next));
-  return next;
+  const authUserId = auth.currentUser?.uid;
+  if (!authUserId) {
+    throw new Error('No authenticated Firebase session. Please sign in first.');
+  }
+  if (authUserId !== userId) {
+    throw new Error('Current auth user does not match requested userId.');
+  }
+
+  const normalizedToken = String(token);
+  const tokenDocId = encodeURIComponent(normalizedToken);
+  await setDoc(
+    doc(tokensCollectionRef(userId), tokenDocId),
+    {
+      token: normalizedToken,
+      platform: platform || 'unknown',
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+  return listDeviceTokens(userId);
 }
 
 export async function unregisterDeviceToken(userId, token) {
@@ -52,9 +86,15 @@ export async function unregisterDeviceToken(userId, token) {
     throw new Error('userId and token are required.');
   }
 
-  const existing = await listDeviceTokens(userId);
-  const next = existing.filter((entry) => entry.token !== token);
-  await AsyncStorage.setItem(keyForUser(userId), JSON.stringify(next));
-  return next;
-}
+  const authUserId = auth.currentUser?.uid;
+  if (!authUserId) {
+    throw new Error('No authenticated Firebase session. Please sign in first.');
+  }
+  if (authUserId !== userId) {
+    throw new Error('Current auth user does not match requested userId.');
+  }
 
+  const tokenDocId = encodeURIComponent(String(token));
+  await deleteDoc(doc(tokensCollectionRef(userId), tokenDocId));
+  return listDeviceTokens(userId);
+}
