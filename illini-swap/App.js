@@ -25,6 +25,7 @@ import { OffersProvider } from './OffersContext';
 import OfferDetailScreen from './OfferDetailScreen';
 import { FavoritesProvider } from "./FavoritesContext";
 
+import {ProfileScreen, YourItems, Settings, Account, Notifications, About} from './ProfileScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -52,6 +53,12 @@ export default function App() {
         <Stack.Screen name="Pending" component={PendingOrders} />
         <Stack.Screen name="OfferDetail" component={OfferDetailScreen} />
         <Stack.Screen name="RealtimeLab" component={RealtimeLabScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="YourItems" component={YourItems} />
+        <Stack.Screen name="Settings" component={Settings} />
+        <Stack.Screen name="Account" component={Account} />
+        <Stack.Screen name="Notifications" component={Notifications} />
+        <Stack.Screen name="About" component={About} />
       </Stack.Navigator>
     </NavigationContainer>
     </FavoritesProvider>
