@@ -15,11 +15,23 @@ import { auth } from "./firebaseConfig";
 
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 
+const CATEGORIES = ["All", "Clothing", "Books", "Tech", "Misc"];
+
+const normalizeCategory = (category) => {
+  if (!category) return "Misc";
+  const c = String(category).trim().toLowerCase();
+  if (c === "clothing") return "Clothing";
+  if (c === "books") return "Books";
+  if (c === "tech") return "Tech";
+  if (c === "misc" || c === "miscellaneous") return "Misc";
+  return "Misc";
+};
+
 const itemImages = [
-  { id: 1, source: require("./images/item1.png"), title: "Listing Name", price: "$10" },
-  { id: 2, source: require("./images/item2.png"), title: "Listing Name", price: "$10" },
-  { id: 3, source: require("./images/item3.png"), title: "Listing Name", price: "$10" },
-  { id: 4, source: require("./images/item4.png"), title: "Listing Name", price: "$10" },
+  { id: 1, source: require("./images/item1.png"), title: "Listing Name", price: "$10", category: "Clothing" },
+  { id: 2, source: require("./images/item2.png"), title: "Listing Name", price: "$10", category: "Books" },
+  { id: 3, source: require("./images/item3.png"), title: "Listing Name", price: "$10", category: "Tech" },
+  { id: 4, source: require("./images/item4.png"), title: "Listing Name", price: "$10", category: "Misc" },
 ]; 
 
 
@@ -41,6 +53,7 @@ const HomeScreen = () => {
 
   // now this useState comes from React
   const [listings, setListings] = useState(itemImages);
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [authStatusText, setAuthStatusText] = useState("Checking sign-in status...");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -77,12 +90,19 @@ const HomeScreen = () => {
       const newItem = {
         id: Date.now().toString(),
         ...route.params.newListing,
+        category: normalizeCategory(route.params.newListing.category),
       };
       setListings(prev => [...prev, newItem]);
       navigation.setParams({ newListing: undefined });
     }
     }, [route.params?.newListing])
   );
+
+  const filteredListings =
+    selectedCategory === "All"
+      ? listings
+      : listings.filter((item) => normalizeCategory(item.category) === selectedCategory);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -132,19 +152,31 @@ const HomeScreen = () => {
         {/* Categories */}
         <Text style={styles.categoriesTitle}>Categories</Text>
         <View style={styles.categoriesContainer}>
-          {["Clothing", "Books", "Tech", "Misc"].map((label, index) => (
+          {CATEGORIES.map((label, index) => (
             <TouchableOpacity
               key={index}
-              style={[styles.categoryButton, { marginRight: 13, marginBottom: 13 }]}
+              style={[
+                styles.categoryButton,
+                selectedCategory === label && styles.categoryButtonSelected,
+                { marginRight: 13, marginBottom: 13 },
+              ]}
+              onPress={() => setSelectedCategory(label)}
             >
-              <Text style={styles.categoryText}>{label}</Text>
+              <Text
+                style={[
+                  styles.categoryText,
+                  selectedCategory === label && styles.categoryTextSelected,
+                ]}
+              >
+                {label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Listings Grid */}
         <View style={styles.listingsContainer}>
-        {listings.map(item => {
+        {filteredListings.map(item => {
             const firstImage = item.images?.[0] ?? item.source;
             const imgSrc = typeof firstImage === 'string'
               ? { uri: firstImage }
@@ -285,7 +317,9 @@ const styles = StyleSheet.create({
   categoriesTitle: { fontSize: 22, fontWeight: "600", color: "#13281F", textAlign: "center", marginTop: 24 },
   categoriesContainer: { marginTop: 12, paddingHorizontal: 24, flexDirection: "row", flexWrap: "wrap" },
   categoryButton: { backgroundColor: "#FCA26E", borderRadius: 20, paddingHorizontal: 18, paddingVertical: 8 },
+  categoryButtonSelected: { backgroundColor: "#13281F" },
   categoryText: { color: "black", fontWeight: "500" },
+  categoryTextSelected: { color: "#FAF7E8" },
   listingsContainer: { marginTop: 24, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", paddingHorizontal: 16 },
   listingBox: { width: 164, padding: 19 },
   listingImage: { width: "100%", height: 203, borderRadius: 10 },
