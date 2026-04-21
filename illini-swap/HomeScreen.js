@@ -135,9 +135,16 @@ const HomeScreen = () => {
               style={[styles.icon, { marginRight: 16 }]}
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("RealtimeLab")}>
-            <Image source={require("./icons/comment-lines.png")} style={styles.icon} />
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Messages")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Image 
+              source={require("./icons/comment-lines.png")} 
+              style={styles.icon} 
+            />
           </TouchableOpacity>
+          
         </View>
 
         {/* Environmental Fact Box */}
