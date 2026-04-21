@@ -1,74 +1,230 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  ActivityIndicator,
   ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
+import { onAuthStateChanged } from 'firebase/auth';
 import OfferCard from './OfferCard';
+import { auth } from './firebaseConfig';
 import {
-  listConversationMessages,
-  markMessageRead,
-  onEvent,
-  sendMessage,
-} from './services/realtime/RealtimeService';
+  getConversationEndpoint,
+  patchMessageReadEndpoint,
+  postMessageEndpoint,
+  subscribeToMessagesEndpoint,
+} from './services/api/FirestoreConversationApi';
+
+function shortUserId(userId) {
+  if (!userId) {
+    return 'Conversation';
+  }
+  if (userId.length <= 14) {
+    return userId;
+  }
+  return `${userId.slice(0, 6)}...${userId.slice(-4)}`;
+}
+
+function sortMessagesAscending(items) {
+  return [...items].sort((left, right) => {
+    const leftTime = left?.createdAt ? new Date(left.createdAt).getTime() : 0;
+    const rightTime = right?.createdAt ? new Date(right.createdAt).getTime() : 0;
+    return leftTime - rightTime;
+  });
+}
+
+function getPeerUserId(participantIds, currentUserId) {
+  return (participantIds || []).find((participantId) => participantId !== currentUserId) || '';
+}
 
 const BuyerConversationScreen = ({ navigation }) => {
   const route = useRoute();
-  const conversationId = route.params?.conversationId || 'buyer-thread-1';
-  const currentUserId = route.params?.currentUserId || 'dev-user-a';
-  const peerUserId = route.params?.peerUserId || 'dev-user-b';
-  const threadTitle = route.params?.title || route.params?.user?.name || 'Conversation';
+  const conversationId = route.params?.conversationId || '';
+  const [currentUserId, setCurrentUserId] = useState(
+    auth.currentUser?.uid || route.params?.currentUserId || ''
+  );
+  const [peerUserId, setPeerUserId] = useState(route.params?.peerUserId || '');
+  const [threadTitle, setThreadTitle] = useState(
+    route.params?.title || shortUserId(route.params?.peerUserId || '')
+  );
   const [expanded, setExpanded] = useState(true);
   const [nudged, setNudged] = useState(false);
   const [draft, setDraft] = useState('');
   const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorText, setErrorText] = useState('');
+  const readInFlightRef = useRef(new Set());
 
   useEffect(() => {
-    const syncMessages = () => {
-      setMessages(listConversationMessages(conversationId));
-    };
-
-    syncMessages();
-
-    const unsubscribe = onEvent((event) => {
-      if (event.payload?.conversationId === conversationId) {
-        syncMessages();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setCurrentUserId('');
+        setMessages([]);
+        setIsLoading(false);
+        setErrorText('Sign in to view this conversation.');
+        return;
       }
+      setCurrentUserId(user.uid);
+      setErrorText('');
     });
 
-    return unsubscribe;
-  }, [conversationId]);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const loadConversation = useCallback(async () => {
+    if (!conversationId) {
+      setIsLoading(false);
+      setErrorText('Conversation id is missing.');
+      return;
+    }
+    if (!currentUserId) {
+      setIsLoading(false);
+      setErrorText('Sign in to load messages.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorText('');
+
+    try {
+      const response = await getConversationEndpoint(currentUserId, conversationId);
+      const conversation = response.body;
+      const peerFromConversation = getPeerUserId(
+        conversation.participantIds,
+        currentUserId
+      );
+
+      setMessages(sortMessagesAscending(conversation.messages || []));
+      if (peerFromConversation) {
+        setPeerUserId(peerFromConversation);
+        if (!route.params?.title) {
+          setThreadTitle(shortUserId(peerFromConversation));
+        }
+      }
+    } catch (error) {
+      setErrorText(error.message || 'Failed to load conversation.');
+      setMessages([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [conversationId, currentUserId, route.params?.title]);
 
   useEffect(() => {
-    const unreadMessage = [...messages]
-      .reverse()
-      .find((message) => message.senderId !== currentUserId && !message.readBy.includes(currentUserId));
+    loadConversation().catch(() => {
+      setErrorText('Failed to load conversation.');
+    });
+  }, [loadConversation]);
 
-    if (unreadMessage) {
-      markMessageRead({ messageId: unreadMessage.id, userId: currentUserId });
+  useEffect(() => {
+    if (!conversationId || !currentUserId) {
+      return undefined;
     }
-  }, [messages, currentUserId]);
 
-  const sortedMessages = useMemo(() => messages, [messages]);
+    let unsubscribe = () => {};
+
+    try {
+      unsubscribe = subscribeToMessagesEndpoint(
+        currentUserId,
+        conversationId,
+        (nextMessages) => {
+          setMessages(sortMessagesAscending(nextMessages || []));
+        },
+        (error) => {
+          setErrorText(error.message || 'Live message stream failed.');
+        }
+      );
+    } catch (error) {
+      setErrorText(error.message || 'Failed to start live message stream.');
+    }
+
+    return () => {
+      unsubscribe();
+    };
+  }, [conversationId, currentUserId]);
+
+  useEffect(() => {
+    if (!currentUserId || !conversationId || messages.length === 0) {
+      return;
+    }
+
+    const unread = messages.filter(
+      (message) =>
+        message.senderId &&
+        message.senderId !== currentUserId &&
+        message.status !== 'read' &&
+        !readInFlightRef.current.has(message.id)
+    );
+
+    if (unread.length === 0) {
+      return;
+    }
+
+    unread.forEach((message) => {
+      readInFlightRef.current.add(message.id);
+    });
+
+    Promise.allSettled(
+      unread.map((message) =>
+        patchMessageReadEndpoint(currentUserId, conversationId, message.id)
+      )
+    ).finally(() => {
+      unread.forEach((message) => {
+        readInFlightRef.current.delete(message.id);
+      });
+    });
+  }, [conversationId, currentUserId, messages]);
+
+  const handleSend = async () => {
+    const trimmedBody = draft.trim();
+    if (!trimmedBody) {
+      return;
+    }
+    if (!currentUserId) {
+      setErrorText('Sign in to send a message.');
+      return;
+    }
+    if (!conversationId) {
+      setErrorText('Conversation id is missing.');
+      return;
+    }
+    if (!peerUserId) {
+      setErrorText('Cannot determine the peer user for this conversation.');
+      return;
+    }
+
+    try {
+      await postMessageEndpoint(currentUserId, conversationId, {
+        body: trimmedBody,
+        status: 'sent',
+      });
+      setDraft('');
+    } catch (error) {
+      setErrorText(error.message || 'Failed to send message.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.icon}>←</Text>
+          <Text style={styles.icon}>{'<'}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.userName}>{threadTitle}</Text>
+        <Text style={styles.userName}>{threadTitle || 'Conversation'}</Text>
 
         <TouchableOpacity>
-          <Text style={styles.icon}>⋮</Text>
+          <Text style={styles.icon}>...</Text>
         </TouchableOpacity>
       </View>
+
+      {errorText ? <Text style={styles.errorText}>{errorText}</Text> : null}
 
       <ScrollView contentContainerStyle={styles.content}>
         <OfferCard
@@ -79,35 +235,39 @@ const BuyerConversationScreen = ({ navigation }) => {
           price="20"
           location="Illini Union"
           availability="Dec 1 - Dec 7, 2025"
-          status={route.params?.user?.status || 'Pending'}
+          status={route.params?.offerStatus || 'Pending'}
         />
 
-        {sortedMessages.map((message) => {
-          const isMine = message.senderId === currentUserId;
-          return (
-            <View
-              key={message.id}
-              style={isMine ? styles.messageBubbleRight : styles.messageBubbleLeft}
-            >
-              <Text style={styles.messageText}>{message.body}</Text>
-            </View>
-          );
-        })}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color="#173528" />
+            <Text style={styles.loadingText}>Loading messages...</Text>
+          </View>
+        ) : messages.length === 0 ? (
+          <Text style={styles.emptyText}>No messages yet. Send the first message.</Text>
+        ) : (
+          messages.map((message) => {
+            const isMine = message.senderId === currentUserId;
+            return (
+              <View
+                key={message.id}
+                style={isMine ? styles.messageBubbleRight : styles.messageBubbleLeft}
+              >
+                <Text style={styles.messageText}>{message.body}</Text>
+              </View>
+            );
+          })
+        )}
 
-        <TouchableOpacity
-          style={styles.nudgeButton}
-          onPress={() => setNudged(true)}
-        >
-          <Text style={styles.nudgeText}>
-            {nudged ? 'Seller Nudged' : 'Nudge Seller'}
-          </Text>
+        <TouchableOpacity style={styles.nudgeButton} onPress={() => setNudged(true)}>
+          <Text style={styles.nudgeText}>{nudged ? 'Seller Nudged' : 'Nudge Seller'}</Text>
         </TouchableOpacity>
 
         <View style={styles.waitingBox}>
           <Text style={styles.waitingText}>
             {nudged ? 'Nudge sent. Waiting for seller...' : 'Waiting for Seller...'}
           </Text>
-          <Text style={styles.lockIcon}>🔒</Text>
+          <Text style={styles.lockIcon}>Locked</Text>
         </View>
       </ScrollView>
 
@@ -119,24 +279,8 @@ const BuyerConversationScreen = ({ navigation }) => {
           value={draft}
           onChangeText={setDraft}
         />
-        <TouchableOpacity
-          onPress={() => {
-            const trimmed = draft.trim();
-            if (!trimmed) {
-              return;
-            }
-
-            sendMessage({
-              conversationId,
-              senderId: currentUserId,
-              recipientId: peerUserId,
-              body: trimmed,
-            });
-            setDraft('');
-            setMessages(listConversationMessages(conversationId));
-          }}
-        >
-          <Text style={styles.sendIcon}>✈</Text>
+        <TouchableOpacity onPress={handleSend}>
+          <Text style={styles.sendAction}>Send</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -161,12 +305,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   icon: {
-    fontSize: 22,
+    fontSize: 20,
     color: '#173528',
+  },
+  errorText: {
+    color: '#AF2D2D',
+    fontSize: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
   content: {
     paddingHorizontal: 16,
     paddingBottom: 20,
+  },
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    color: '#37594D',
+  },
+  emptyText: {
+    color: '#6C7A74',
+    marginBottom: 14,
   },
   messageBubbleRight: {
     alignSelf: 'flex-end',
@@ -221,7 +383,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   lockIcon: {
-    fontSize: 16,
+    fontSize: 12,
+    color: '#8B8B8B',
   },
   inputBar: {
     margin: 16,
@@ -238,9 +401,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: '#173528',
   },
-  sendIcon: {
-    fontSize: 18,
+  sendAction: {
+    fontSize: 14,
     color: '#173528',
+    fontWeight: '600',
     paddingLeft: 8,
   },
 });

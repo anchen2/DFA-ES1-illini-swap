@@ -1,107 +1,199 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  ActivityIndicator,
   Image,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { listConversationMessages, onEvent } from './services/realtime/RealtimeService';
+import { useFocusEffect } from '@react-navigation/native';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebaseConfig';
+import {
+  getConversationsEndpoint,
+  postConversationEndpoint,
+} from './services/api/FirestoreConversationApi';
 
-const sentOffers = [
-  {
-    id: 1,
-    name: 'Lucas N.',
-    time: 'sent 1 hr ago',
-    status: 'Approved',
-    avatar: null,
-    conversationId: 'buyer-thread-1',
-    currentUserId: 'dev-user-a',
-    peerUserId: 'dev-user-b',
-  },
-  {
-    id: 2,
-    name: 'Arianna G.',
-    time: 'sent 1 hr ago',
-    status: 'Pending',
-    avatar: null,
-    conversationId: 'buyer-thread-2',
-    currentUserId: 'dev-user-a',
-    peerUserId: 'dev-user-b',
-  },
-  {
-    id: 3,
-    name: 'Cynthia E.',
-    time: 'sent 1 hr ago',
-    status: 'Declined',
-    avatar: null,
-    conversationId: 'buyer-thread-3',
-    currentUserId: 'dev-user-a',
-    peerUserId: 'dev-user-b',
-  },
-];
+function shortUserId(userId) {
+  if (!userId) {
+    return 'Unknown user';
+  }
+  if (userId.length <= 14) {
+    return userId;
+  }
+  return `${userId.slice(0, 6)}...${userId.slice(-4)}`;
+}
 
-const receivedOffers = [
-  {
-    id: 1,
-    name: 'Johnny B.',
-    time: 'received 1 hr ago',
-    status: 'Pending',
-    avatar: null,
-    conversationId: 'seller-thread-1',
-    currentUserId: 'dev-user-b',
-    peerUserId: 'dev-user-a',
-  },
-  {
-    id: 2,
-    name: 'Monty M.',
-    time: 'received 1 hr ago',
-    status: 'Pending',
-    avatar: null,
-    conversationId: 'seller-thread-2',
-    currentUserId: 'dev-user-b',
-    peerUserId: 'dev-user-a',
-  },
-];
+function formatActivityLabel(updatedAtIso) {
+  if (!updatedAtIso) {
+    return 'No activity yet';
+  }
+
+  const date = new Date(updatedAtIso);
+  if (Number.isNaN(date.getTime())) {
+    return 'No activity yet';
+  }
+  return date.toLocaleString();
+}
+
+function toConversationItem(conversation, currentUserId) {
+  const participantIds = conversation?.participantIds || [];
+  const peerUserId =
+    participantIds.find((participantId) => participantId !== currentUserId) || '';
+
+  return {
+    id: conversation?.id || '',
+    conversationId: conversation?.id || '',
+    peerUserId,
+    title: shortUserId(peerUserId),
+    direction: conversation?.createdBy === currentUserId ? 'sent' : 'received',
+    status: conversation?.status || 'active',
+    preview: conversation?.lastMessageText || 'Tap to start the thread',
+    updatedAt: conversation?.updatedAt || null,
+    createdBy: conversation?.createdBy || '',
+    participantIds,
+  };
+}
+
+function toStatusLabel(status) {
+  if (!status) {
+    return 'Unknown';
+  }
+  return `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
+}
 
 const MessageScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('sent');
-  const [refreshTick, setRefreshTick] = useState(0);
-  const data = activeTab === 'sent' ? sentOffers : receivedOffers;
+  const [currentUserId, setCurrentUserId] = useState(auth.currentUser?.uid || '');
+  const [conversations, setConversations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
+  const [peerUserIdInput, setPeerUserIdInput] = useState('');
+  const [errorText, setErrorText] = useState('');
 
-  const getStatusStyle = (status) => {
-    if (status === 'Approved') return styles.approved;
-    if (status === 'Declined') return styles.declined;
-    return styles.pending;
-  };
+  const loadConversations = useCallback(async () => {
+    const sessionUserId = auth.currentUser?.uid || '';
 
-  useEffect(() => {
-    const unsubscribe = onEvent(() => {
-      setRefreshTick((value) => value + 1);
-    });
+    if (!sessionUserId) {
+      setCurrentUserId('');
+      setConversations([]);
+      setErrorText('Sign in to view Firestore conversations.');
+      setIsLoading(false);
+      return;
+    }
 
-    return unsubscribe;
+    setCurrentUserId(sessionUserId);
+    setErrorText('');
+    setIsLoading(true);
+
+    try {
+      const response = await getConversationsEndpoint(sessionUserId, {
+        direction: 'all',
+      });
+      setConversations(Array.isArray(response.body) ? response.body : []);
+    } catch (error) {
+      setConversations([]);
+      setErrorText(error.message || 'Failed to load conversations.');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const handlePress = (item) => {
-    if (activeTab === 'sent') {
-      navigation.navigate('BuyerConversation', {
-        user: item,
-        conversationId: item.conversationId,
-        currentUserId: item.currentUserId,
-        peerUserId: item.peerUserId,
-        title: item.name,
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, () => {
+      loadConversations().catch(() => {
+        setErrorText('Failed to refresh auth session.');
       });
-    } else {
-      navigation.navigate('SellerConversation', {
-        user: item,
-        conversationId: item.conversationId,
-        currentUserId: item.currentUserId,
-        peerUserId: item.peerUserId,
-        title: item.name,
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [loadConversations]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadConversations().catch(() => {
+        setErrorText('Failed to load conversations.');
       });
+    }, [loadConversations])
+  );
+
+  const items = useMemo(() => {
+    return conversations
+      .map((conversation) => toConversationItem(conversation, currentUserId))
+      .filter((item) => item.direction === activeTab);
+  }, [activeTab, conversations, currentUserId]);
+
+  const getStatusStyle = (status) => {
+    if (status === 'closed') {
+      return styles.declined;
+    }
+    if (status === 'archived') {
+      return styles.pending;
+    }
+    return styles.approved;
+  };
+
+  const openConversation = (conversation) => {
+    const participantIds = conversation?.participantIds || [];
+    const peerUserId =
+      participantIds.find((participantId) => participantId !== currentUserId) || '';
+    const targetScreen =
+      conversation?.createdBy === currentUserId
+        ? 'BuyerConversation'
+        : 'SellerConversation';
+
+    navigation.navigate(targetScreen, {
+      conversationId: conversation?.id || '',
+      currentUserId,
+      peerUserId,
+      title: shortUserId(peerUserId),
+      conversationStatus: conversation?.status || 'active',
+      offerStatus: 'Pending',
+    });
+  };
+
+  const handleStartConversation = async () => {
+    const peerUserId = peerUserIdInput.trim();
+
+    if (!currentUserId) {
+      setErrorText('Sign in first to start messaging.');
+      return;
+    }
+    if (!peerUserId) {
+      setErrorText('Enter another user Firebase UID.');
+      return;
+    }
+    if (peerUserId === currentUserId) {
+      setErrorText('You cannot create a conversation with your own UID.');
+      return;
+    }
+
+    setIsStartingConversation(true);
+    setErrorText('');
+
+    try {
+      const response = await postConversationEndpoint(currentUserId, {
+        peerUserId,
+        status: 'active',
+      });
+      const conversation = response?.body?.conversation;
+
+      setPeerUserIdInput('');
+      await loadConversations();
+
+      if (conversation) {
+        openConversation(conversation);
+      }
+    } catch (error) {
+      setErrorText(error.message || 'Failed to start conversation.');
+    } finally {
+      setIsStartingConversation(false);
     }
   };
 
@@ -109,24 +201,47 @@ const MessageScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>←</Text>
+          <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerText}>Messages</Text>
         <View style={{ width: 24 }} />
       </View>
+
+      <View style={styles.composeCard}>
+        <Text style={styles.composeTitle}>Start Conversation by Firebase UID</Text>
+        <Text style={styles.composeSubTitle}>
+          Signed in as: {currentUserId || 'not signed in'}
+        </Text>
+        <TextInput
+          value={peerUserIdInput}
+          onChangeText={setPeerUserIdInput}
+          placeholder="Enter other user UID"
+          autoCapitalize="none"
+          style={styles.input}
+        />
+        <TouchableOpacity
+          style={[
+            styles.startButton,
+            (!currentUserId || isStartingConversation) && styles.startButtonDisabled,
+          ]}
+          disabled={!currentUserId || isStartingConversation}
+          onPress={handleStartConversation}
+        >
+          <Text style={styles.startButtonText}>
+            {isStartingConversation ? 'Starting...' : 'Start or Open Conversation'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {errorText ? <Text style={styles.errorText}>{errorText}</Text> : null}
 
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'sent' && styles.activeTab]}
           onPress={() => setActiveTab('sent')}
         >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'sent' && styles.activeTabText,
-            ]}
-          >
-            Sent Offers
+          <Text style={[styles.tabText, activeTab === 'sent' && styles.activeTabText]}>
+            Sent
           </Text>
         </TouchableOpacity>
 
@@ -140,38 +255,45 @@ const MessageScreen = ({ navigation }) => {
               activeTab === 'received' && styles.activeTabText,
             ]}
           >
-            Received Offers
+            Received
           </Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView>
-        {data.map((item) => (
-          <TouchableOpacity
-            key={item.conversationId}
-            style={styles.messageRow}
-            onPress={() => handlePress(item)}
-          >
-            {item.avatar ? (
-              <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder} />
-            )}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color="#173528" />
+          <Text style={styles.loadingText}>Loading conversations...</Text>
+        </View>
+      ) : (
+        <ScrollView>
+          {items.length === 0 ? (
+            <Text style={styles.emptyText}>No conversations in this tab yet.</Text>
+          ) : (
+            items.map((item) => (
+              <TouchableOpacity
+                key={item.conversationId}
+                style={styles.messageRow}
+                onPress={() => openConversation(item)}
+              >
+                <View style={styles.avatarPlaceholder}>
+                  <Image source={require('./icons/nav-user-square.png')} style={styles.avatarIcon} />
+                </View>
 
-            <View style={styles.messageInfo}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.time}>{item.time}</Text>
-              <Text style={styles.previewText}>
-                {listConversationMessages(item.conversationId).slice(-1)[0]?.body || 'Tap to start the thread'}
-              </Text>
-            </View>
+                <View style={styles.messageInfo}>
+                  <Text style={styles.name}>{item.title}</Text>
+                  <Text style={styles.time}>{formatActivityLabel(item.updatedAt)}</Text>
+                  <Text style={styles.previewText}>{item.preview}</Text>
+                </View>
 
-            <View style={[styles.statusPill, getStatusStyle(item.status)]}>
-              <Text style={styles.statusText}>{item.status}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+                <View style={[styles.statusPill, getStatusStyle(item.status)]}>
+                  <Text style={styles.statusText}>{toStatusLabel(item.status)}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -196,6 +318,55 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     color: '#13281F',
+  },
+  composeCard: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D7DDD6',
+    borderRadius: 12,
+    padding: 12,
+  },
+  composeTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#13281F',
+    marginBottom: 4,
+  },
+  composeSubTitle: {
+    color: '#6C7A74',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#9FB0AA',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 8,
+    color: '#13281F',
+    backgroundColor: '#FAF7E8',
+  },
+  startButton: {
+    backgroundColor: '#173528',
+    borderRadius: 8,
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  startButtonDisabled: {
+    opacity: 0.5,
+  },
+  startButtonText: {
+    color: '#FAF7E8',
+    fontWeight: '600',
+  },
+  errorText: {
+    color: '#AF2D2D',
+    fontSize: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -224,6 +395,20 @@ const styles = StyleSheet.create({
     color: '#13281F',
     fontWeight: '600',
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    color: '#37594D',
+  },
+  emptyText: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    color: '#6C7A74',
+  },
   messageRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -233,16 +418,18 @@ const styles = StyleSheet.create({
     borderColor: '#C9CEC8',
     marginHorizontal: 16,
   },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-  },
   avatarPlaceholder: {
     width: 42,
     height: 42,
     borderRadius: 21,
     backgroundColor: '#E3E3E3',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarIcon: {
+    width: 22,
+    height: 22,
+    tintColor: '#37594D',
   },
   messageInfo: {
     flex: 1,

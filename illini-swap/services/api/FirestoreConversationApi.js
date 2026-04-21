@@ -138,12 +138,15 @@ export async function postConversationEndpoint(userId, body) {
   const key = buildParticipantsKey(actorUserId, peerUserId);
   const existingQuery = query(
     collection(db, 'conversations'),
-    where('participantsKey', '==', key)
+    where('participantIds', 'array-contains', actorUserId)
   );
   const existingSnapshot = await getDocs(existingQuery);
   const existing = sortByUpdatedAtDesc(
     existingSnapshot.docs.map((item) => mapConversation(item))
-  ).find((conversation) => conversation.status !== 'closed');
+  ).find(
+    (conversation) =>
+      conversation.participantsKey === key && conversation.status !== 'closed'
+  );
 
   if (existing) {
     return response(201, {
