@@ -4,9 +4,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Image,
   FlatList,
   StyleSheet,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFavorites } from "./FavoritesContext";
@@ -201,29 +203,35 @@ const SearchScreen = ({ navigation }) => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
-        {/* Header row with back arrow */}
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Image source={require("./icons/arrow-left.png")} style={styles.icon} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Search</Text>
-          <View style={styles.icon} />{/* spacer to center title */}
-        </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={{ flex: 1 }}>
+            {/* Header row with back arrow */}
+            <View style={styles.headerRow}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Image source={require("./icons/arrow-left.png")} style={styles.icon} />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Search</Text>
+              <View style={styles.icon} />{/* spacer to center title */}
+            </View>
 
-        {/* Results grid */}
-        <FlatList
-          data={paginated}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-          numColumns={2}
-          ListHeaderComponent={ListHeader}
-          ListEmptyComponent={ListEmpty}
-          ListFooterComponent={ListFooter}
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.4}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.listContent}
-        />
+            {/* Results grid */}
+            <FlatList
+              data={paginated}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderItem}
+              numColumns={2}
+              ListHeaderComponent={ListHeader}
+              ListEmptyComponent={ListEmpty}
+              ListFooterComponent={ListFooter}
+              onEndReached={loadMore}
+              onEndReachedThreshold={0.4}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === "ios" ? "on-drag" : "none"}
+              onScrollBeginDrag={Keyboard.dismiss}
+              contentContainerStyle={styles.listContent}
+            />
+          </View>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -243,6 +251,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 8,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 36,
+    fontWeight: "500",
+    color: "#000",
+    fontFamily: "Georgia",
   },
   icon: {
     width: 32,
@@ -297,10 +313,85 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#000",
   },
+  resultsCount: {
+    marginTop: 16,
+    textAlign: "center",
+    color: "#13281F",
+    fontWeight: "500",
+  },
   listContent: {
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 120,
+  },
+  listingBox: {
+    flex: 1,
+    padding: 12,
+    marginBottom: 16,
+  },
+  listingBoxRight: {
+    marginLeft: 12,
+  },
+  listingImage: {
+    width: "100%",
+    height: 203,
+    borderRadius: 10,
+  },
+  listingTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#13281F",
+    textAlign: "center",
+    marginTop: 6,
+  },
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    marginTop: 2,
+  },
+  listingPrice: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#13281F",
+  },
+  heartIcon: {
+    width: 21,
+    height: 21,
+    resizeMode: "contain",
+  },
+  emptyContainer: {
+    marginTop: 32,
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  emptyEmoji: {
+    fontSize: 36,
+  },
+  emptyTitle: {
+    marginTop: 12,
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#13281F",
+  },
+  emptySubtitle: {
+    marginTop: 6,
+    fontSize: 14,
+    color: "#555",
+    textAlign: "center",
+  },
+  loadMoreButton: {
+    marginTop: 8,
+    alignSelf: "center",
+    backgroundColor: "#13281F",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 18,
+  },
+  loadMoreText: {
+    color: "#FAF7E8",
+    fontWeight: "600",
   },
   resultRow: {
     flexDirection: "row",
