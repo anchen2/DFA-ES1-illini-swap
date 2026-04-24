@@ -37,23 +37,14 @@ const RECOMMENDED_TAGS = [
 
 const PAGE_SIZE = 6;
 
-// NOTE: replace this with your real items source or a Context.
-const MOCK_ITEMS = [
-  { id: 1, source: require("./images/item1.png"), title: "Rest is Resistance", price: "$12", category: "Books" },
-  { id: 2, source: require("./images/item2.png"), title: "Grey Cross Hoodie", price: "$35", category: "Fashion" },
-  { id: 3, source: require("./images/item3.png"), title: "Wayfarer Glasses", price: "$20", category: "Glasses" },
-  { id: 4, source: require("./images/item4.png"), title: "Retro Polaroid", price: "$45", category: "Tech" },
-  { id: 5, source: require("./images/item1.png"), title: "Python Textbook", price: "$18", category: "Books" },
-  { id: 6, source: require("./images/item2.png"), title: "Vintage Skirt", price: "$22", category: "Skirts" },
-  { id: 7, source: require("./images/item3.png"), title: "Running Shoes", price: "$60", category: "Shoes" },
-  { id: 8, source: require("./images/item4.png"), title: "Gold Bracelet", price: "$15", category: "Accessories" },
-];
 
 const SearchScreen = ({ navigation }) => {
   const inputRef = useRef(null);
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState(null);
   const [page, setPage] = useState(1);
+  const [items, setItems] = useState([]); //for items
+  const [loading, setLoad] = useState(false); //new for loading state
   const { favorites, toggleFavorite } = useFavorites();
 
   // Auto‑focus search bar when screen mounts
@@ -64,27 +55,37 @@ const SearchScreen = ({ navigation }) => {
 
   // When search changes, reset pagination
   useEffect(() => {
-    setPage(1);
+    fetchItems();
   }, [query, activeTag]);
 
   // ------------------------------------------------------------------
   // Filtering logic
   // ------------------------------------------------------------------
-  const lowerQuery = query.trim().toLowerCase();
-  const filtered = MOCK_ITEMS.filter((item) => {
-    const matchesTag = activeTag ? item.category === activeTag : true;
-    const matchesQuery = lowerQuery.length
-      ? item.title.toLowerCase().includes(lowerQuery)
-      : true;
-    return matchesTag && matchesQuery;
-  });
+  
+  const fetchItems = async () =>  {
+    try {
+      setLoading(true);
 
-  const paginated = filtered.slice(0, page * PAGE_SIZE);
-  const hasMore = paginated.length < filtered.length;
-  const loadMore = () => {
-    if (hasMore) setPage((p) => p + 1);
+      const params = new URLSearchParams({
+      category: activeTag || "",
+      search: query || "",
+      limit: PAGE_SIZE.toString(),
+    });
+
+    const res = await fetch(
+      `https://YOUR_FIREBASE_FUNCTION_URL/searchPosts?${params}`
+    );
+
+    const data = await res.json();
+
+    setItems(data.items);
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
-
 
   // ------------------------------------------------------------------
   // UI helpers
@@ -170,7 +171,7 @@ const SearchScreen = ({ navigation }) => {
       {/* Results count */}
       {(query.length > 0 || activeTag) && (
         <Text style={styles.resultsCount}>
-          {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+          {items.length} result{items.length !== 1 ? "s" : ""}
           {activeTag ? ` in ${activeTag}` : ""}
         </Text>
       )}
@@ -188,7 +189,7 @@ const SearchScreen = ({ navigation }) => {
   );
 
   const ListFooter = () => {
-    if (!hasMore || filtered.length === 0) return null;
+    if (!hasMore || items.length === 0) return null;
     return (
       <TouchableOpacity style={styles.loadMoreButton} onPress={loadMore}>
         <Text style={styles.loadMoreText}>Load More</Text>
@@ -216,14 +217,13 @@ const SearchScreen = ({ navigation }) => {
 
             {/* Results grid */}
             <FlatList
-              data={paginated}
+              data={items}
               keyExtractor={(item) => item.id.toString()}
               renderItem={renderItem}
               numColumns={2}
               ListHeaderComponent={ListHeader}
               ListEmptyComponent={ListEmpty}
               ListFooterComponent={ListFooter}
-              onEndReached={loadMore}
               onEndReachedThreshold={0.4}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode={Platform.OS === "ios" ? "on-drag" : "none"}
