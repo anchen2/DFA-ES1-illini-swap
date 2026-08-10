@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, enableNetwork } from 'firebase/firestore';
+import { doc, getDoc, setDoc, enableNetwork } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig'; // Make sure db is exported in firebaseConfig
 import {
   Text,
@@ -33,19 +33,33 @@ export default function SignInScreen() {
       // Fetch user data from Firestore
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
+      let userData = null;
 
       if (userDoc.exists()) {
-        const data = userDoc.data();
-        if (data.firstLogin === true) {
-          navigation.replace('Preferences'); // Show Preferences screen if it's the first login
-        } else {
-          navigation.replace('Home'); // Go straight to Home for subsequent logins
-        }
+        userData = userDoc.data();
       } else {
-        setErrorMessage('User data not found.');
+        // Self-heal legacy accounts that authenticated but never got a profile document.
+        userData = {
+          fullName: user.displayName || user.email?.split('@')[0] || 'Illini Swap User',
+          email: user.email || email,
+          firstLogin: true,
+          createdAt: new Date(),
+          profileRepairedAtSignIn: true,
+        };
+        await setDoc(userDocRef, userData, { merge: true });
+      }
+
+      if (userData.firstLogin === true) {
+          navigation.replace('Preferences'); // Show Preferences screen if it's the first login
+      } else {
+        navigation.replace('Home'); // Go straight to Home for subsequent logins
       }
     } catch (error) {
       console.error('Login Error:', error.message);
+      if (error?.code === 'permission-denied') {
+        setErrorMessage('Your account can sign in, but profile access was denied by Firestore rules.');
+        return;
+      }
       setErrorMessage('Incorrect email or password.');
     }
   };

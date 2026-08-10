@@ -130,6 +130,7 @@ New documentation for the realtime messaging and notifications deliverable:
 
 - `illini-swap/docs/realtime-notifications-spec.md`
 - `illini-swap/docs/realtime-lab-guide.md`
+- `illini-swap/docs/conversation-api-spec.md`
 
 Quick test path:
 

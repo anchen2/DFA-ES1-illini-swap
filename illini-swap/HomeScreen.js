@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFavorites } from "./FavoritesContext"; // <== Import context!
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebaseConfig";
 
 
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
@@ -52,6 +54,25 @@ const HomeScreen = () => {
   // now this useState comes from React
   const [listings, setListings] = useState(itemImages);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [authStatusText, setAuthStatusText] = useState("Checking sign-in status...");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const identity = user.email || user.uid;
+        setAuthStatusText(`Logged in: ${identity}`);
+        setIsLoggedIn(true);
+        return;
+      }
+      setAuthStatusText("Not logged in (tap to sign in)");
+      setIsLoggedIn(false);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -88,6 +109,19 @@ const HomeScreen = () => {
         {/* Top Header */}
         <View style={styles.headerContainer}>
           <Text style={styles.headerText}>Home</Text>
+          <TouchableOpacity
+            disabled={isLoggedIn}
+            onPress={() => {
+              if (!isLoggedIn) {
+                navigation.navigate("Sign In");
+              }
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={[styles.authStatusText, !isLoggedIn && styles.authStatusLink]}>
+              {authStatusText}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Top Right Icons */}
@@ -101,8 +135,23 @@ const HomeScreen = () => {
               style={[styles.icon, { marginRight: 16 }]}
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("RealtimeLab")}>
-            <Image source={require("./icons/comment-lines.png")} style={styles.icon} />
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Messages")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Image 
+              source={require("./icons/comment-lines.png")} 
+              style={styles.icon} 
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Profile")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Image
+              source={require("./icons/nav-user-square.png")}
+              style={[styles.icon, { marginLeft: 16 }]}
+            />
           </TouchableOpacity>
         </View>
 
@@ -252,7 +301,6 @@ const HomeScreen = () => {
         <TouchableOpacity onPress={() => navigation.navigate("Pending")}>
           <Image source={require("./icons/nav-pending.png")} style={styles.icon} />
         </TouchableOpacity>
-        <Image source={require("./icons/nav-user-square.png")} style={styles.icon} />
       </View>
     </SafeAreaView>
   );
@@ -263,6 +311,8 @@ const styles = StyleSheet.create({
   scrollContainer: { paddingBottom: 140, flexGrow: 1 },
   headerContainer: { marginTop: 16, alignItems: "center" },
   headerText: { fontSize: 36, fontWeight: "500", color: "#000", fontFamily: "Georgia" },
+  authStatusText: { marginTop: 4, fontSize: 12, color: "#37594D", fontWeight: "500" },
+  authStatusLink: { textDecorationLine: "underline" },
   topIconsContainer: { position: "absolute", right: 16, top: 16, flexDirection: "row" },
   icon: { width: 33, height: 33 },
   factBox: {

@@ -17,11 +17,15 @@ import FavoritesScreen from './FavoritesScreen';
 import SellItem from './SellItem'
 import PendingOrders from './PendingOrders'
 import RealtimeLabScreen from './RealtimeLabScreen';
+import MessageScreen from './MessageScreen';
+import SellerConversationScreen from './SellerConversationScreen'
+import BuyerConversationScreen from './BuyerConversationScreen'
+import SwapConfirmationScreen from './SwapConfirmationScreen';
 import { OffersProvider } from './OffersContext';
-
 import OfferDetailScreen from './OfferDetailScreen';
 import { FavoritesProvider } from "./FavoritesContext";
 
+import {ProfileScreen, YourItems, Settings, Account, Notifications, About} from './ProfileScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -39,12 +43,22 @@ export default function App() {
         <Stack.Screen name="Availability" component={AvailabilityScreen} />
         <Stack.Screen name="ReviewOffer" component={ReviewOfferScreen} />
         <Stack.Screen name="Search" component={SearchScreen} />
+        <Stack.Screen name="Messages" component={MessageScreen} />
+        <Stack.Screen name="SellerConversation" component={SellerConversationScreen} />
+        <Stack.Screen name="BuyerConversation" component={BuyerConversationScreen} />
+        <Stack.Screen name="SwapConfirmation" component={SwapConfirmationScreen} />
         <Stack.Screen name="Favorites" component={FavoritesScreen} />
         <Stack.Screen name="SellItem" component={SellItem} />
         <Stack.Screen name="Preferences" component={PreferenceScreen} />
         <Stack.Screen name="Pending" component={PendingOrders} />
         <Stack.Screen name="OfferDetail" component={OfferDetailScreen} />
         <Stack.Screen name="RealtimeLab" component={RealtimeLabScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="YourItems" component={YourItems} />
+        <Stack.Screen name="Settings" component={Settings} />
+        <Stack.Screen name="Account" component={Account} />
+        <Stack.Screen name="Notifications" component={Notifications} />
+        <Stack.Screen name="About" component={About} />
       </Stack.Navigator>
     </NavigationContainer>
     </FavoritesProvider>
